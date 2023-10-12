@@ -4,7 +4,7 @@ File Name: constants
 Change Log: creation - 12/10/2023
 """
 
-# Protocol Constants
+# Protocol Constants:
 CMD_FIELD_LENGTH = 16  # Exact length of cmd field (in bytes)
 LENGTH_FIELD_LENGTH = 4  # Exact length of length field (in bytes)
 
@@ -15,10 +15,10 @@ MAX_MSG_LENGTH = MSG_HEADER_LENGTH + MAX_DATA_LENGTH  # Max size of total messag
 DELIMITER = "|"  # Delimiter character in protocol
 DATA_DELIMITER = "#"  # Delimiter in the data part of the message
 
-# Other constants
+# Other constants:
 ERROR_RETURN = None  # What is returned in case of an error
 
-# Protocol Messages
+# Protocol Messages:
 # In these dictionaries we will have all the client and server command names
 PROTOCOL_CLIENT = {
     "login_msg": "LOGIN",
@@ -28,7 +28,7 @@ PROTOCOL_CLIENT = {
     "send_answer_msg": "SEND_ANSWER",
     "my_score_msg": "MY_SCORE",
     "highscore_msg": "HIGHSCORE",
-}  # . Add more commands if needed
+}
 
 PROTOCOL_SERVER = {
     "login_ok_msg": "LOGIN_OK",
@@ -40,4 +40,4 @@ PROTOCOL_SERVER = {
     "all_score_msg": "ALL_SCORE",
     "login_failed_msg": "ERROR",
     "no_questions_msg": "NO_QUESTIONS"
-}  # .  Add more commands if needed
+}

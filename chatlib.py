@@ -12,7 +12,9 @@ from constants import *
 def build_message(cmd: str, data: str) -> str:
     """
     Gets command name (str) and data field (str) and creates a valid protocol message
-    Returns: str, or None if error occured
+    :param cmd: the command name
+    :param data: the data field
+    :return: str of the full message, or None if error occurred
     """
 
     # validate inputs
@@ -21,8 +23,6 @@ def build_message(cmd: str, data: str) -> str:
 
     if cmd not in PROTOCOL_CLIENT.values() and cmd not in PROTOCOL_SERVER.values():
         return ERROR_RETURN
-
-    # CHECK FOR INVALID DATA??
 
     # calculate return message
     string_len = str(len(data))
@@ -37,7 +37,8 @@ def build_message(cmd: str, data: str) -> str:
 def parse_message(data: str):
     """
     Parses protocol message and returns command name and data field
-    Returns: cmd (str), data (str). If some error occurred, returns None, None
+    :param data: a full inputted message
+    :return: cmd (str), data (str). If some error occurred, returns None, None
     """
 
     # validate delimiter count and whole data length
@@ -64,28 +65,30 @@ def parse_message(data: str):
     if not length.isnumeric():
         return ERROR_RETURN, ERROR_RETURN
 
-    # VALIDATE MESSAGE ??
+    # todo: VALIDATE MESSAGE ?
 
     return cmd, message
 
 
-def split_data(msg: str, expected_fields: int) -> List:
+def split_data(msg: str, expected_fields: int) -> List[str]:
     """
     Helper method. gets a string and number of expected fields in it. Splits the string
     using protocol's data field delimiter (|#) and validates that there are correct number of fields.
-    Returns: list of fields if all ok. If some error occurred, returns None
+    :param msg: the message field
+    :param expected_fields: number of expected fields in it
+    :return: list of fields if all ok. If some error occurred, returns None
     """
 
     if msg.count(DATA_DELIMITER) == expected_fields:
-        fields_list = msg.split(DATA_DELIMITER)
-        return fields_list
+        return msg.split(DATA_DELIMITER)
 
     return [ERROR_RETURN]
 
 
 def join_data(msg_fields: List[str]) -> str:
     """
-    Helper method. Gets a list, joins all of it's fields to one string divided by the data delimiter.
-    Returns: string that looks like cell1#cell2#cell3
+    Helper method. Gets a list, joins all of its fields to one string divided by the data delimiter.
+    :param msg_fields: a list representing subfields in the message field
+    :return: string that looks like cell1#cell2#cell3
     """
     return "#".join(msg_fields)

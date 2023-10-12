@@ -1,3 +1,9 @@
+"""
+Author: Ori Boteach
+File Name: chatlib_test
+Change Log: creation - 12/10/2023
+"""
+
 import chatlib
 
 

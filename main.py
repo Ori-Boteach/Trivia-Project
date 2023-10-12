@@ -1,6 +1,16 @@
+"""
+Author: Ori Boteach
+File Name: main
+Change Log: creation - 12/10/2023
+"""
+
 from chatlib import split_data, join_data, build_message, parse_message
 
-if __name__ == '__main__':
+
+def run_initial_tests():
+    """
+    a function that runs basic tests on the functions it the chatlib module
+    """
     answer = split_data("username#password", 1)
     print(answer)
 
@@ -25,3 +35,13 @@ if __name__ == '__main__':
     ans = parse_message("LOGIN           |   z|aaaa#bbbb")
     print(ans)
 
+
+def main():
+    """
+    the main function in the project
+    """
+    run_initial_tests()
+
+
+if __name__ == '__main__':
+    main()
