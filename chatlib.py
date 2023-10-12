@@ -7,6 +7,7 @@ Change Log: creation - 12/10/2023
 from typing import List
 
 from constants import *
+from validators import build_validator, initial_parser_validator, parser_fields_validator
 
 
 def build_message(cmd: str, data: str) -> str:
@@ -17,11 +18,12 @@ def build_message(cmd: str, data: str) -> str:
     :return: str of the full message, or None if error occurred
     """
 
-    # validate inputs
-    if len(data) > MAX_DATA_LENGTH or len(cmd) > CMD_FIELD_LENGTH:
-        return ERROR_RETURN
+    # validating inputs
+    try:
+        build_validator(cmd, data)
 
-    if cmd not in PROTOCOL_CLIENT.values() and cmd not in PROTOCOL_SERVER.values():
+    # using broad exception like taught because acting the same for all caught exceptions
+    except Exception:
         return ERROR_RETURN
 
     # calculate return message
@@ -42,30 +44,28 @@ def parse_message(data: str):
     """
 
     # validate delimiter count and whole data length
-    if data.count(DELIMITER) != 2 or len(data) > MAX_MSG_LENGTH:
+    try:
+        initial_parser_validator(data)
+    # using broad exception like taught because acting the same for all caught exceptions
+    except Exception:
         return ERROR_RETURN, ERROR_RETURN
 
-    substrings = data.split(DELIMITER)
+    # separating the data to it's fields
+    subfields = data.split(DELIMITER)
 
-    cmd = substrings[0]
-    length = substrings[1]
-    message = substrings[2]
+    cmd = subfields[0]
+    length = subfields[1]
+    message = subfields[2]
 
-    # validate fields lengths
-    if len(cmd) != CMD_FIELD_LENGTH or len(length) != LENGTH_FIELD_LENGTH or len(message) > MAX_DATA_LENGTH:
+    # validate field's lengths and contents
+    try:
+        parser_fields_validator(cmd, length, message)
+    # using broad exception like taught because acting the same for all caught exceptions
+    except Exception:
         return ERROR_RETURN, ERROR_RETURN
 
-    # check that the given command is valid
+    # remove padding spaces from the command field
     cmd = cmd.replace(" ", "")
-    if cmd not in PROTOCOL_CLIENT.values() and cmd not in PROTOCOL_SERVER.values():
-        return ERROR_RETURN, ERROR_RETURN
-
-    # can work both with spaces and with zeros!
-    length = length.replace(" ", "0")
-    if not length.isnumeric():
-        return ERROR_RETURN, ERROR_RETURN
-
-    # todo: VALIDATE MESSAGE ?
 
     return cmd, message
 
