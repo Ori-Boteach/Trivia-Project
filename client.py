@@ -5,91 +5,16 @@ Change Log: creation - 12/10/2023
 """
 
 import socket
-from asyncio.log import logger
 
-import chatlib
 from chatlib import *
-
-
-def build_and_send_message(conn: socket, cmd: str, data: str):
-    """
-    the function builds a new message using chatlib, wanted code and message.
-    Prints debug info, then sends it to the given socket.
-    :param conn: socket object that is used to communicate with the server
-    :param cmd: the command name
-    :param data: the message field
-    :return: Nothing
-    """
-
-    # building a message by protocol with build_message()
-    full_message = build_message(cmd, data)
-
-    # printing full_message as debug information
-    logger.debug(full_message)
-
-    # sending the built message to the server
-    conn.send(full_message.encode())
-
-
-def recv_message_and_parse(conn: socket):
-    """
-    the function receives a new message from given socket,
-    then parses the message using chatlib.
-    :param conn: socket object that is used to communicate with the server
-    :return: cmd (str) and data (str) of the received message.
-             If error occurred, will return None, None
-    """
-    full_message = conn.recv(1024).decode()
-
-    cmd, data = chatlib.parse_message(full_message)
-    return cmd, data
-
-
-def connect() -> socket:
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((SERVER_IP, SERVER_PORT))
-    return client_socket
-
-
-def error_and_exit(error_msg) -> None:
-    """
-    the function prints the given error message and exits the program (with built-in function - like specified)
-    :param error_msg: the provided error message
-    """
-    print(error_msg)
-    exit()  # CHANGE TO EXCEPTION THAT QUITS!!
-
-
-def login(conn: socket):
-    login_successful = False
-
-    while not login_successful:
-        username = input("Please enter username: \n")
-        password = input("Please enter password: \n")
-
-        message_data = username + "#" + password
-        build_and_send_message(conn, PROTOCOL_CLIENT["login_msg"], message_data)
-
-        cmd, data = recv_message_and_parse(conn)
-        if cmd == PROTOCOL_SERVER["login_ok_msg"]:
-            print("Logged in!")
-            login_successful = True
-        else:
-            print("ERROR! username or password does not exist")
-
-
-def logout(conn: socket):
-    build_and_send_message(conn, PROTOCOL_CLIENT["logout_msg"], "")
-    print("Goodbye!")
-
-
-def build_send_recv_parse(conn: socket, cmd: str, data: str):
-    build_and_send_message(conn, cmd, data)
-    msg_code, data = recv_message_and_parse(conn)
-    return msg_code, data
+from client_helper_functions import build_send_recv_parse, error_and_exit, connect, login, logout
 
 
 def get_score(conn: socket):
+    """
+    the function gets and prints the user's score
+    :param conn: socket object that is used to communicate with the server
+    """
     msg_code, data = build_send_recv_parse(conn, PROTOCOL_CLIENT["my_score_msg"], "")
 
     if msg_code != PROTOCOL_SERVER["your_score_msg"]:
@@ -99,6 +24,10 @@ def get_score(conn: socket):
 
 
 def get_highscore(conn: socket):
+    """
+    the function gets and prints the high score list
+    :param conn: socket object that is used to communicate with the server
+    """
     msg_code, data = build_send_recv_parse(conn, PROTOCOL_CLIENT["highscore_msg"], "")
 
     if msg_code != PROTOCOL_SERVER["all_score_msg"]:
@@ -108,6 +37,10 @@ def get_highscore(conn: socket):
 
 
 def get_logged_users(conn: socket):
+    """
+    the function gets and prints the currently logged users
+    :param conn: socket object that is used to communicate with the server
+    """
     msg_code, data = build_send_recv_parse(conn, PROTOCOL_CLIENT["logged_msg"], "")
 
     if msg_code != PROTOCOL_SERVER["logged_answer_msg"]:
@@ -116,21 +49,39 @@ def get_logged_users(conn: socket):
     print("logged users:\n" + data)
 
 
-def play_question(conn: socket):
-    msg_code, data = build_send_recv_parse(conn, PROTOCOL_CLIENT["get_question_msg"], "")
-
-    # check if there are no more questions
+def play_question_validation(msg_code: str):
+    """
+    the function check if there are no more questions or if there was an error in the response
+    :param msg_code: the returned message command
+    """
     if msg_code == PROTOCOL_SERVER["no_questions_msg"]:
         error_and_exit("no more questions! GAME OVER!!!")
 
     if msg_code != PROTOCOL_SERVER["your_question_msg"]:
         error_and_exit("ERROR getting your question!")
 
-    question_fields = split_data(data, 5)  # CONST!!
+
+def print_question(data: str):
+    """
+    the function prints the trivia question
+    :param data: the question data from the server
+    :return: the different parts of the question
+    """
+    question_fields = split_data(data, QUESTION_FIELDS_NUMBER)
     question = question_fields[1]
+
     print("Your question:\n" + question)
     print(f"\t1.{question_fields[2]}\n\t2.{question_fields[3]}\n\t3.{question_fields[4]}\n\t4.{question_fields[5]}")
 
+    return question_fields
+
+
+def send_user_answer(conn, question_fields):
+    """
+    the function send user's answer and print correlating response
+    :param conn: socket object that is used to communicate with the server
+    :param question_fields: the different parts of the question
+    """
     user_answer = input("what do you think is the right answer [1-4]? ")
     full_answer = question_fields[0] + "#" + user_answer
     msg_code, data = build_send_recv_parse(conn, PROTOCOL_CLIENT["send_answer_msg"], full_answer)
@@ -142,9 +93,24 @@ def play_question(conn: socket):
         print(f"You are wrong! the correct answer is #{data}")
 
 
+def play_question(conn: socket):
+    """
+    the function lets the user answer a question, shows correct answer if wrong and updates score if not
+    :param conn: socket object that is used to communicate with the server
+    """
+    msg_code, data = build_send_recv_parse(conn, PROTOCOL_CLIENT["get_question_msg"], "")
+
+    # check if there are no more questions
+    play_question_validation(msg_code)
+
+    question_fields = print_question(data)
+
+    send_user_answer(conn, question_fields)
+
+
 def main():
     """
-    the main function in this module
+    the main function in the client module
     """
 
     server_connection = connect()
