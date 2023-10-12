@@ -12,9 +12,9 @@ from validators import build_validator, initial_parser_validator, parser_fields_
 
 def build_message(cmd: str, data: str) -> str:
     """
-    Gets command name (str) and data field (str) and creates a valid protocol message
+    Gets command name (str) and message field (str) and creates a valid protocol message
     :param cmd: the command name
-    :param data: the data field
+    :param data: the message field
     :return: str of the full message, or None if error occurred
     """
 

@@ -18,6 +18,9 @@ DATA_DELIMITER = "#"  # Delimiter in the data part of the message
 # Other constants:
 ERROR_RETURN = None  # What is returned in case of an error
 
+SERVER_IP = "127.0.0.1"  # Our server will run on same computer as client
+SERVER_PORT = 5678
+
 # Protocol Messages:
 # In these dictionaries we will have all the client and server command names
 PROTOCOL_CLIENT = {
