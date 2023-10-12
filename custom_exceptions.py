@@ -6,6 +6,7 @@ Change Log: creation - 12/10/2023
 
 
 class NoneExistingProtocol:
+    """ a custom exception for a protocol command that does not exist"""
 
     def __init__(self, cmd):
         self.cmd = cmd
@@ -15,16 +16,21 @@ class NoneExistingProtocol:
 
 
 class InvalidFieldLength:
+    """ a custom exception for a field that exceeds max length"""
+
     def __str__(self):
         return "one of the fields' length in the protocol is over the limit"
 
 
 class InvalidLengthField:
+    """ a custom exception for a length field that does not consist of only digits or spaces"""
+
     def __str__(self):
         return "the length field does not consist of only digits or spaces"
 
 
 class InvalidDelimiterCount:
+    """ a custom exception for a number of delimiters in the message other than two"""
 
     def __init__(self, count):
         self.count = count
