@@ -116,26 +116,26 @@ def main():
     server_connection = connect()
     login(server_connection)
 
+    menu_options = {
+        'b': lambda: get_score(server_connection),
+        'c': lambda: get_highscore(server_connection),
+        'd': lambda: play_question(server_connection),
+        'e': lambda: get_logged_users(server_connection)
+    }
+
     user_exit = False
     while not user_exit:
         user_input = input("what do you want to do?\n a. logout\n b. see your current score\n"
-                           " c. see high scores\n d. play a question\n e. see logged users\n")
+                           " c. see high scores\n d. play a question\n e. see logged users\n").lower()
 
-        # CHANGE TO BETTER!!
+        # if user chose to exit
         if user_input.lower() == "a":
             user_exit = True
 
-        elif user_input.lower() == "b":
-            get_score(server_connection)
-
-        elif user_input.lower() == "c":
-            get_highscore(server_connection)
-
-        elif user_input.lower() == "d":
-            play_question(server_connection)
-
-        elif user_input.lower() == "e":
-            get_logged_users(server_connection)
+        elif user_input in menu_options:
+            menu_options[user_input]()
+        else:
+            print("Invalid choice! Please choose a valid option")
 
     logout(server_connection)
     server_connection.close()
