@@ -19,7 +19,7 @@ DATA_DELIMITER = "#"  # Delimiter in the data part of the message
 ERROR_RETURN = None  # What is returned in case of an error
 QUESTION_FIELDS_NUMBER = 5
 
-SERVER_IP = "127.0.0.1"  # Our server will run on same computer as client
+CLIENT_IP = "127.0.0.1"  # Our server will run on same computer as client
 SERVER_PORT = 5678
 
 # Protocol Messages:

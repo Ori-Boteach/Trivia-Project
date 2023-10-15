@@ -5,13 +5,14 @@ Change Log: creation - 12/10/2023
 """
 
 import socket
+
 import chatlib
 
 from asyncio.log import logger
-from constants import SERVER_IP, SERVER_PORT, PROTOCOL_CLIENT, PROTOCOL_SERVER
+from constants import CLIENT_IP, SERVER_PORT, PROTOCOL_CLIENT, PROTOCOL_SERVER
 
 
-def build_and_send_message(conn: socket, cmd: str, data: str):
+def build_and_send_message(conn: socket, cmd: str, data: str) -> None:
     """
     the function builds a new message using chatlib, wanted code and message.
     Prints debug info, then sends it to the given socket.
@@ -20,7 +21,6 @@ def build_and_send_message(conn: socket, cmd: str, data: str):
     :param data: the message field
     :return: Nothing
     """
-
     # building a message by protocol with build_message()
     full_message = chatlib.build_message(cmd, data)
 
@@ -31,7 +31,7 @@ def build_and_send_message(conn: socket, cmd: str, data: str):
     conn.send(full_message.encode())
 
 
-def recv_message_and_parse(conn: socket):
+def recv_message_and_parse(conn: socket) -> tuple[str, str]:
     """
     the function receives a new message from given socket,
     then parses the message using chatlib.
@@ -51,11 +51,11 @@ def connect() -> socket:
     :return: the connection between the server and the client
     """
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((SERVER_IP, SERVER_PORT))
+    client_socket.connect((CLIENT_IP, SERVER_PORT))
     return client_socket
 
 
-def error_and_exit(error_msg):
+def error_and_exit(error_msg) -> None:
     """
     the function prints the given error message and exits the program
     (SPECIFIED TO DO WITH exit()!)
@@ -65,7 +65,7 @@ def error_and_exit(error_msg):
     exit()
 
 
-def login(conn: socket):
+def login(conn: socket) -> None:
     """
     the function receives a username and password from the user and tries to
     log in to the server until success
@@ -91,7 +91,7 @@ def login(conn: socket):
             print("ERROR! username or password does not exist")
 
 
-def logout(conn: socket):
+def logout(conn: socket) -> None:
     """
     the function logs out the client from the server
     :param conn: socket object that is used to communicate with the server
@@ -100,7 +100,7 @@ def logout(conn: socket):
     print("Goodbye!")
 
 
-def build_send_recv_parse(conn: socket, cmd: str, data: str):
+def build_send_recv_parse(conn: socket, cmd: str, data: str) -> tuple[str, str]:
     """
     the function sends a message to the server by the known protocol and returns the answer
     :param conn: socket object that is used to communicate with the server

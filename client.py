@@ -10,58 +10,64 @@ from chatlib import *
 from client_helper_functions import build_send_recv_parse, error_and_exit, connect, login, logout
 
 
-def get_score(conn: socket):
+def get_score(conn: socket) -> None:
     """
     the function gets and prints the user's score
     :param conn: socket object that is used to communicate with the server
     """
     msg_code, data = build_send_recv_parse(conn, PROTOCOL_CLIENT["my_score_msg"], "")
 
+    # validate that the received command from server is as expected
     if msg_code != PROTOCOL_SERVER["your_score_msg"]:
         error_and_exit("ERROR getting your score!")
 
     print("Your score is: " + data)
 
 
-def get_highscore(conn: socket):
+def get_highscore(conn: socket) -> None:
     """
     the function gets and prints the high score list
     :param conn: socket object that is used to communicate with the server
     """
     msg_code, data = build_send_recv_parse(conn, PROTOCOL_CLIENT["highscore_msg"], "")
 
+    # validate that the received command from server is as expected
     if msg_code != PROTOCOL_SERVER["all_score_msg"]:
         error_and_exit("ERROR getting high score!")
 
     print("high scores:\n" + data)
 
 
-def get_logged_users(conn: socket):
+def get_logged_users(conn: socket) -> None:
     """
     the function gets and prints the currently logged users
     :param conn: socket object that is used to communicate with the server
     """
     msg_code, data = build_send_recv_parse(conn, PROTOCOL_CLIENT["logged_msg"], "")
 
+    # validate that the received command from server is as expected
     if msg_code != PROTOCOL_SERVER["logged_answer_msg"]:
         error_and_exit("ERROR getting logged users!")
 
     print("logged users:\n" + data)
 
 
-def play_question_validation(msg_code: str):
+def play_question_validation(msg_code: str) -> None:
     """
     the function check if there are no more questions or if there was an error in the response
     :param msg_code: the returned message command
     """
+
+    # check for a case where there are no more questions left
     if msg_code == PROTOCOL_SERVER["no_questions_msg"]:
         error_and_exit("no more questions! GAME OVER!!!")
 
+    # validate that the received command from server is as expected
     if msg_code != PROTOCOL_SERVER["your_question_msg"]:
         error_and_exit("ERROR getting your question!")
 
 
-def print_question(data: str):
+def print_question(data: str) -> list[str]:
     """
     the function prints the trivia question
     :param data: the question data from the server
@@ -76,7 +82,7 @@ def print_question(data: str):
     return question_fields
 
 
-def send_user_answer(conn, question_fields):
+def send_user_answer(conn, question_fields) -> None:
     """
     the function send user's answer and print correlating response
     :param conn: socket object that is used to communicate with the server
@@ -93,11 +99,12 @@ def send_user_answer(conn, question_fields):
         print(f"You are wrong! the correct answer is #{data}")
 
 
-def play_question(conn: socket):
+def play_question(conn: socket) -> None:
     """
     the function lets the user answer a question, shows correct answer if wrong and updates score if not
     :param conn: socket object that is used to communicate with the server
     """
+    # get the trivia question from the server
     msg_code, data = build_send_recv_parse(conn, PROTOCOL_CLIENT["get_question_msg"], "")
 
     # check if there are no more questions
