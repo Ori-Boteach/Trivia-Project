@@ -4,13 +4,13 @@ File Name: server_helpers
 Change Log: creation - 15/10/2023
 """
 
-# --------------------------------HELPER SOCKET METHODS:
 import socket
 
 import chatlib
 from constants import MAX_MSG_LENGTH, SERVER_IP, SERVER_PORT, PROTOCOL_SERVER
 
 
+# HELPER SOCKET METHODS:
 def build_and_send_message(conn: socket, cmd: str, msg: str) -> None:
     """
     the function builds a new message using chatlib, wanted code and message.
@@ -47,7 +47,7 @@ def recv_message_and_parse(conn: socket) -> tuple[str, str]:
     return cmd, data
 
 
-# --------------------------------Data Loaders:
+# Data Loaders:
 
 def load_questions():
     """
@@ -78,7 +78,7 @@ def load_user_database():
     return users_dict
 
 
-# -------------------------SOCKET CREATOR:
+# SOCKET CREATOR:
 
 def setup_socket() -> socket:
     """

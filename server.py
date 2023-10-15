@@ -16,8 +16,6 @@ questions = {}
 logged_users = {}  # a dictionary of client hostnames to usernames
 
 
-# ----------------MESSAGE HANDLING:
-
 def handle_getscore_message(conn: socket, username: str):
     """
     the function uses the provided socket and username to send the user's score to the client
@@ -66,10 +64,35 @@ def handle_logout_message(conn: socket):
     """
     global logged_users
 
-    # remove user from logged users after successful logout
+    # remove user from logged users and close connection after successful logout
     logged_users.pop(conn.getpeername())
-
     conn.close()
+
+
+def validate_login(conn: socket, message_fields: list[str], cmd: str) -> str:
+    """
+    the function validates the login message from the client
+    :param conn: socket object that is used to communicate with the client
+    :param message_fields: the fields of the message the client sent
+    :param cmd: the command the client sent
+    :return: an error message if invalid, nothing otherwise
+    """
+    # validate the clients login message
+    if message_fields == [ERROR_RETURN] or cmd != PROTOCOL_CLIENT["login_msg"]:
+        send_error(conn, "error occurred trying to understand your message!")
+        return ERROR_MSG
+
+    # check if the user exists
+    username = message_fields[0]
+    if username not in users:
+        send_error(conn, ERROR_MSG + "Username does not exists!")
+        return ERROR_MSG
+
+    # check if the password is correct
+    password = message_fields[1]
+    if password != users[username]["password"]:
+        send_error(conn, ERROR_MSG + "Password does not match!")
+        return ERROR_MSG
 
 
 def handle_login_message(conn: socket, data: str) -> None:
@@ -82,28 +105,15 @@ def handle_login_message(conn: socket, data: str) -> None:
     cmd, message = chatlib.parse_message(data)
     message_fields = chatlib.split_data(message, 1)
 
-    # validate the clients login message
-    if message_fields == [ERROR_RETURN] or cmd != PROTOCOL_CLIENT["login_msg"]:
-        send_error(conn, "error occurred trying to understand your message!")
-        return
-
-    # check if the user exists
-    username = message_fields[0]
-    if username not in users:
-        send_error(conn, ERROR_MSG + "Username does not exists!")
-        return
-
-    # check if the password is correct
-    password = message_fields[1]
-    if password != users[username]["password"]:
-        send_error(conn, ERROR_MSG + "Password does not match!")
+    # validate the clients login for correct command, username and password
+    if validate_login(conn, message_fields, cmd) == ERROR_MSG:
         return
 
     # successful login
     build_and_send_message(conn, PROTOCOL_SERVER["login_ok_msg"], "")
 
-    # add user to logged users after successful login
-    logged_users[conn.getpeername()] = username
+    # add user's username to logged users after successful login
+    logged_users[conn.getpeername()] = message_fields[0]
 
 
 def create_random_question() -> str:
@@ -142,17 +152,17 @@ def handle_answer_message(conn: socket, data: str) -> None:
         return
 
     question_id = int(split_message[0])
-    answer = int(split_message[1])
+    user_answer = int(split_message[1])
+    correct_answer = questions[question_id]["correct"]
 
     # check if the answer is correct
-    if answer == questions[question_id]["correct"]:
-        # update user's score
+    if user_answer == correct_answer:
+        # update user's score and send correct answer message
         answering_user = logged_users[conn.getpeername()]
         users[answering_user]["score"] += 5
-        build_and_send_message(conn, PROTOCOL_SERVER["correct_answer_msg"], "")  # send correct answer message
-    else:
-        build_and_send_message(conn, PROTOCOL_SERVER["wrong_answer_msg"],
-                               str(questions[question_id]["correct"]))  # send wrong answer message
+        build_and_send_message(conn, PROTOCOL_SERVER["correct_answer_msg"], "")
+    else:  # send wrong answer message
+        build_and_send_message(conn, PROTOCOL_SERVER["wrong_answer_msg"], str(correct_answer))
 
 
 def handle_client_message(conn: socket, cmd: str, data: str) -> None:
@@ -197,17 +207,13 @@ def main():
     """
     the main function in the server module
     """
-
     # Initializes global users and questions dictionaries using load functions
-    global users
-    global questions
-    global logged_users
+    global users, questions, logged_users
 
     users = load_user_database()
     questions = load_questions()
 
-    print("Welcome to Trivia Server!")
-    print("starting up on port 5678")
+    print("Welcome to Trivia Server!\nStarting up on port 5678")
 
     # setup server connection
     server_socket = setup_socket()
