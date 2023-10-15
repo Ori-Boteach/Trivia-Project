@@ -24,8 +24,6 @@ def handle_getscore_message(conn: socket, username: str):
     :param conn: socket object that is used to communicate with the client
     :param username: a string representing client's username
     """
-    global users
-
     user_score = users[username]["score"]
     build_and_send_message(conn, PROTOCOL_SERVER["your_score_msg"], str(user_score))
 
@@ -35,7 +33,6 @@ def handle_highscore_message(conn: socket):
     the function sends to the client the players score list (from highest to lowest)
     :param conn: socket object that is used to communicate with the client
     """
-    global users
     # get sorted users, dictionary pairs by their score
     sorted_users = sorted(users.items(), key=lambda x: x[1]["score"], reverse=True)
 
@@ -82,10 +79,6 @@ def handle_login_message(conn: socket, data: str) -> None:
     :param conn: socket object that is used to communicate with the client
     :param data: a string representing the data sent by the username according to protocol
     """
-
-    global users  # This is needed to access the same users dictionary from all functions
-    global logged_users
-
     cmd, message = chatlib.parse_message(data)
     message_fields = chatlib.split_data(message, 1)
 
@@ -118,12 +111,10 @@ def create_random_question() -> str:
     the function builds a random question (by protocol) from the questions' dictionary
     :return: the random question message field
     """
-    global questions
-    random_id, random_question = random.choice(list(questions.items()))
-    question_message_field = str(random_id) + DATA_DELIMITER + random_question["question"] + DATA_DELIMITER \
-                             + random_question["answers"][0] + DATA_DELIMITER + random_question["answers"][1] \
-                             + DATA_DELIMITER + random_question["answers"][2] + DATA_DELIMITER + \
-                             random_question["answers"][3]
+    id, question = random.choice(list(questions.items()))
+    answers = question["answers"]
+    question_message_field = str(id) + DATA_DELIMITER + question["question"] + DATA_DELIMITER + answers[0] \
+                             + DATA_DELIMITER + answers[1] + DATA_DELIMITER + answers[2] + DATA_DELIMITER + answers[3]
 
     return question_message_field
 
@@ -142,6 +133,7 @@ def handle_answer_message(conn: socket, data: str) -> None:
     :param conn: socket object that is used to communicate with the client
     :param data: the message field the user sent with the SEND_ANSWER command
     """
+    global users
     split_message = chatlib.split_data(data, 1)
 
     # validate client's response message field
@@ -170,7 +162,15 @@ def handle_client_message(conn: socket, cmd: str, data: str) -> None:
     :param cmd: a string representing the code field in the protocol
     :param data: a string representing the message field in the protocol
     """
-    global logged_users
+    # a dictionary to navigate between the commands and their handlers
+    command_handlers = {
+        PROTOCOL_CLIENT["logout_msg"]: lambda: handle_logout_message(conn),
+        PROTOCOL_CLIENT["my_score_msg"]: lambda: handle_getscore_message(conn, logged_users[conn.getpeername()]),
+        PROTOCOL_CLIENT["highscore_msg"]: lambda: handle_highscore_message(conn),
+        PROTOCOL_CLIENT["logged_msg"]: lambda: handle_logged_message(conn),
+        PROTOCOL_CLIENT["get_question_msg"]: lambda: handle_question_message(conn),
+        PROTOCOL_CLIENT["send_answer_msg"]: lambda: handle_answer_message(conn, data),
+    }
 
     # get the full message from the client
     full_message = chatlib.build_message(cmd, data)
@@ -183,23 +183,14 @@ def handle_client_message(conn: socket, cmd: str, data: str) -> None:
         else:
             # send an error message of unrecognized command
             send_error(conn, "command is not recognized!")
-
-    else:  # todo: MAKE BETTER!
-        if cmd == PROTOCOL_CLIENT["logout_msg"]:
-            handle_logout_message(conn)
-        elif cmd == PROTOCOL_CLIENT["my_score_msg"]:
-            handle_getscore_message(conn, logged_users[conn.getpeername()])
-        elif cmd == PROTOCOL_CLIENT["highscore_msg"]:
-            handle_highscore_message(conn)
-        elif cmd == PROTOCOL_CLIENT["logged_msg"]:
-            handle_logged_message(conn)
-        elif cmd == PROTOCOL_CLIENT["get_question_msg"]:
-            handle_question_message(conn)
-        elif cmd == PROTOCOL_CLIENT["send_answer_msg"]:
-            handle_answer_message(conn, data)
+    # if user is logged in
+    else:
+        # Check if the command is recognized and call the corresponding handler
+        handler = command_handlers.get(cmd, None)
+        if handler:
+            handler()
         else:
-            # send an error message of unrecognized command
-            send_error(conn, "command is not recognized!")
+            send_error(conn, "Command is not recognized!")
 
 
 def main():
@@ -207,7 +198,7 @@ def main():
     the main function in the server module
     """
 
-    # Initializes global users and questions dictionaries using load functions, will be used later
+    # Initializes global users and questions dictionaries using load functions
     global users
     global questions
     global logged_users
