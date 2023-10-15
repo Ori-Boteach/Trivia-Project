@@ -3,10 +3,10 @@ Author: Ori Boteach
 File Name: server
 Change Log: creation - 15/10/2023
 """
-
+import random
 import socket
 import chatlib
-from constants import PROTOCOL_CLIENT, ERROR_RETURN, PROTOCOL_SERVER, ERROR_MSG
+from constants import PROTOCOL_CLIENT, ERROR_RETURN, PROTOCOL_SERVER, ERROR_MSG, DATA_DELIMITER
 from server_helpers import send_error, build_and_send_message, load_user_database, load_questions, \
     setup_socket, recv_message_and_parse
 
@@ -59,7 +59,7 @@ def handle_logged_message(conn: socket):
     for client_address in logged_users.keys():
         logged += logged_users[client_address] + ", "
 
-    build_and_send_message(conn, PROTOCOL_SERVER["logged_answer_msg"], logged)
+    build_and_send_message(conn, PROTOCOL_SERVER["logged_answer_msg"], logged[:-2])
 
 
 def handle_logout_message(conn: socket):
@@ -113,6 +113,56 @@ def handle_login_message(conn: socket, data: str) -> None:
     logged_users[conn.getpeername()] = username
 
 
+def create_random_question() -> str:
+    """
+    the function builds a random question (by protocol) from the questions' dictionary
+    :return: the random question message field
+    """
+    global questions
+    random_id, random_question = random.choice(list(questions.items()))
+    question_message_field = str(random_id) + DATA_DELIMITER + random_question["question"] + DATA_DELIMITER \
+                             + random_question["answers"][0] + DATA_DELIMITER + random_question["answers"][1] \
+                             + DATA_DELIMITER + random_question["answers"][2] + DATA_DELIMITER + \
+                             random_question["answers"][3]
+
+    return question_message_field
+
+
+def handle_question_message(conn: socket) -> None:
+    """
+    the function sends with provided socket a random question, by protocol, to the client
+    :param conn: socket object that is used to communicate with the client
+    """
+    build_and_send_message(conn, PROTOCOL_SERVER["your_question_msg"], create_random_question())
+
+
+def handle_answer_message(conn: socket, data: str) -> None:
+    """
+    the function checks if the users answer is correct one, responds accordingly and updates the users score
+    :param conn: socket object that is used to communicate with the client
+    :param data: the message field the user sent with the SEND_ANSWER command
+    """
+    split_message = chatlib.split_data(data, 1)
+
+    # validate client's response message field
+    if split_message == [ERROR_RETURN]:
+        send_error(conn, "error occurred trying to understand your message!")
+        return
+
+    question_id = int(split_message[0])
+    answer = int(split_message[1])
+
+    # check if the answer is correct
+    if answer == questions[question_id]["correct"]:
+        # update user's score
+        answering_user = logged_users[conn.getpeername()]
+        users[answering_user]["score"] += 5
+        build_and_send_message(conn, PROTOCOL_SERVER["correct_answer_msg"], "")  # send correct answer message
+    else:
+        build_and_send_message(conn, PROTOCOL_SERVER["wrong_answer_msg"],
+                               str(questions[question_id]["correct"]))  # send wrong answer message
+
+
 def handle_client_message(conn: socket, cmd: str, data: str) -> None:
     """
     the function gets message code and data and calls the right function to handle command
@@ -143,6 +193,10 @@ def handle_client_message(conn: socket, cmd: str, data: str) -> None:
             handle_highscore_message(conn)
         elif cmd == PROTOCOL_CLIENT["logged_msg"]:
             handle_logged_message(conn)
+        elif cmd == PROTOCOL_CLIENT["get_question_msg"]:
+            handle_question_message(conn)
+        elif cmd == PROTOCOL_CLIENT["send_answer_msg"]:
+            handle_answer_message(conn, data)
         else:
             # send an error message of unrecognized command
             send_error(conn, "command is not recognized!")
