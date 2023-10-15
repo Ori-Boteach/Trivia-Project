@@ -70,16 +70,16 @@ def parse_message(data: str):
     return cmd, message
 
 
-def split_data(msg: str, expected_fields: int) -> List[str]:
+def split_data(msg: str, expected_delimiters: int) -> List[str]:
     """
-    Helper method. gets a string and number of expected fields in it. Splits the string
+    Helper method. gets a string and number of expected delimiters in it. Splits the string
     using protocol's data field delimiter (|#) and validates that there are correct number of fields.
     :param msg: the message field
-    :param expected_fields: number of expected fields in it
+    :param expected_delimiters: number of expected delimiters in it
     :return: list of fields if all ok. If some error occurred, returns None
     """
 
-    if msg.count(DATA_DELIMITER) == expected_fields:
+    if msg.count(DATA_DELIMITER) == expected_delimiters:
         return msg.split(DATA_DELIMITER)
 
     return [ERROR_RETURN]
