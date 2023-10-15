@@ -5,15 +5,52 @@ Change Log: creation - 15/10/2023
 """
 import random
 import socket
+
+import select
+
 import chatlib
 from constants import PROTOCOL_CLIENT, ERROR_RETURN, PROTOCOL_SERVER, ERROR_MSG, DATA_DELIMITER
-from server_helpers import send_error, build_and_send_message, load_user_database, load_questions, \
-    setup_socket, recv_message_and_parse
+from server_helpers import load_user_database, load_questions, setup_socket, recv_message_and_parse
 
 # GLOBAL variables
 users = {}
 questions = {}
 logged_users = {}  # a dictionary of client hostnames to usernames
+messages_to_send = []  # a list of messages to send to clients
+
+
+def print_client_sockets(client_sockets):
+    for client in client_sockets:
+        print("\t", client.getpeername())
+
+
+def build_and_send_message(conn: socket, cmd: str, msg: str) -> None:
+    """
+    the function builds a new message using chatlib, wanted code and message.
+    Prints debug info, then sends it to the given socket
+    :param conn: socket object that is used to communicate with the client
+    :param cmd: the command name
+    :param msg: the message field
+    :return: Nothing
+    """
+    global messages_to_send
+
+    # building a message by protocol with build_message()
+    full_message = chatlib.build_message(cmd, msg)
+
+    print("[SERVER] ", full_message)  # Debug print
+
+    # add outgoing message to messages_to_send list
+    messages_to_send.append((conn, full_message.encode()))
+
+
+def send_error(conn: socket, error_msg: str):
+    """
+    the function sends an error response with the given message
+    :param conn: socket object that is used to communicate with the client
+    :param error_msg: a string representing the error
+    """
+    build_and_send_message(conn, PROTOCOL_SERVER["login_failed_msg"], error_msg)
 
 
 def handle_getscore_message(conn: socket, username: str):
@@ -208,7 +245,8 @@ def main():
     the main function in the server module
     """
     # Initializes global users and questions dictionaries using load functions
-    global users, questions, logged_users
+    global users, questions, logged_users, messages_to_send
+    client_sockets = []
 
     users = load_user_database()
     questions = load_questions()
@@ -217,48 +255,59 @@ def main():
 
     # setup server connection
     server_socket = setup_socket()
-    (client_socket, client_address) = server_socket.accept()
-    print("[SERVER] ", "new user has connected")
 
     while True:
-        try:
-            # get client message and separate fields
-            cmd, data = recv_message_and_parse(client_socket)
+        ready_to_read, ready_to_write, in_error = select.select([server_socket] + client_sockets, client_sockets, [])
 
-            # ------handle ctrl c (cmd and data are None)-----
-            if cmd is None and data is None:
-                logged_users.pop(client_socket.getpeername())
-                client_socket.close()
-                print("[SERVER] ", "user has disconnected forcibly, waiting for a new connection")
+        for current_socket in ready_to_read:
+            # in case a new client tries to connect to the server
+            if current_socket is server_socket:
+                (client_socket, client_address) = current_socket.accept()
+                print("New client joined!", client_address)
+                client_sockets.append(client_socket)
+                print_client_sockets(client_sockets)
 
-                (client_socket, client_address) = server_socket.accept()
-                print("[SERVER] ", "new user has connected")
-                continue
-            # -----------------------------------------------
+            # an old client needs handling
+            else:
+                try:
+                    # get client message and separate fields
+                    cmd, data = recv_message_and_parse(current_socket)
 
-            if cmd == PROTOCOL_CLIENT["logout_msg"]:
-                # handle logout message
-                handle_client_message(client_socket, cmd, data)
+                    # ------handle ctrl c (cmd and data are None)-----
+                    if cmd is None and data is None:
+                        logged_users.pop(current_socket.getpeername())
+                        client_sockets.remove(current_socket)  # remove exiting client from client_sockets list
+                        current_socket.close()
+                        print("[SERVER] ", "user has disconnected forcibly, waiting for a new connection")
+                        continue
 
-                # close logged out socket from server side and wait for another client to login
-                client_socket.close()
-                print("[SERVER] ", "user has disconnected, waiting for a new connection")
+                    if cmd == PROTOCOL_CLIENT["logout_msg"]:
+                        # handle logout message
+                        handle_client_message(current_socket, cmd, data)
 
-                (client_socket, client_address) = server_socket.accept()
-                print("[SERVER] ", "new user has connected")
-                continue
+                        client_sockets.remove(current_socket)  # remove exiting client from client_sockets list
 
-            # handle client message accordingly
-            handle_client_message(client_socket, cmd, data)
+                        # close logged out socket from server side and wait for another client to login
+                        current_socket.close()
+                        print("[SERVER] ", "user has disconnected, waiting for a new connection")
+                        continue
 
-        # handle a case of an existing connection that was forcibly closed by the remote host
-        except:
-            logged_users.pop(client_socket.getpeername())
-            client_socket.close()
-            print("[SERVER] ", "user has disconnected forcibly, waiting for a new connection")
+                    # handle client message accordingly
+                    handle_client_message(current_socket, cmd, data)
 
-            (client_socket, client_address) = server_socket.accept()
-            print("[SERVER] ", "new user has connected")
+                # handle a case of an existing connection that was forcibly closed by the remote host
+                except:
+                    logged_users.pop(current_socket.getpeername())
+                    client_sockets.remove(current_socket)  # remove exiting client from client_sockets list
+                    current_socket.close()
+                    print("[SERVER] ", "user has disconnected forcibly, waiting for a new connection")
+
+        # handle messages for ready clients and save for later messages for unready ones
+        for message in messages_to_send:
+            current_socket, full_message = message
+            if current_socket in ready_to_write:
+                current_socket.send(full_message)
+                messages_to_send.remove(message)
 
 
 if __name__ == '__main__':

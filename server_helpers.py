@@ -7,29 +7,10 @@ Change Log: creation - 15/10/2023
 import socket
 
 import chatlib
-from constants import MAX_MSG_LENGTH, SERVER_IP, SERVER_PORT, PROTOCOL_SERVER
+from constants import MAX_MSG_LENGTH, SERVER_IP, SERVER_PORT
 
 
-# HELPER SOCKET METHODS:
-def build_and_send_message(conn: socket, cmd: str, msg: str) -> None:
-    """
-    the function builds a new message using chatlib, wanted code and message.
-    Prints debug info, then sends it to the given socket
-    :param conn: socket object that is used to communicate with the client
-    :param cmd: the command name
-    :param msg: the message field
-    :return: Nothing
-    """
-
-    # building a message by protocol with build_message()
-    full_message = chatlib.build_message(cmd, msg)
-
-    print("[SERVER] ", full_message)  # Debug print
-
-    # sending the built message to the server
-    conn.send(full_message.encode())
-
-
+# HELPER SOCKET METHOD:
 def recv_message_and_parse(conn: socket) -> tuple[str, str]:
     """
     the function receives a new message from given socket,
@@ -48,7 +29,6 @@ def recv_message_and_parse(conn: socket) -> tuple[str, str]:
 
 
 # Data Loaders:
-
 def load_questions():
     """
     the function loads questions bank from file	## FILE SUPPORT TO BE ADDED LATER
@@ -79,7 +59,6 @@ def load_user_database():
 
 
 # SOCKET CREATOR:
-
 def setup_socket() -> socket:
     """
     the function creates new listening socket and returns it
@@ -91,13 +70,3 @@ def setup_socket() -> socket:
     server_socket.listen()
 
     return server_socket
-
-
-def send_error(conn: socket, error_msg: str):
-    """
-    the function sends an error response with the given message
-    :param conn: socket object that is used to communicate with the client
-    :param error_msg: a string representing the error
-    """
-
-    build_and_send_message(conn, PROTOCOL_SERVER["login_failed_msg"], error_msg)
