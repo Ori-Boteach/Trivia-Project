@@ -20,14 +20,46 @@ logged_users = {}  # a dictionary of client hostnames to usernames
 
 def handle_getscore_message(conn: socket, username: str):
     """
-    the function COMPLETE
+    the function uses the provided socket and username to send the user's score to the client
     :param conn: socket object that is used to communicate with the client
     :param username: a string representing client's username
     """
-
     global users
 
-    # Implement this in later chapters
+    user_score = users[username]["score"]
+    build_and_send_message(conn, PROTOCOL_SERVER["your_score_msg"], str(user_score))
+
+
+def handle_highscore_message(conn: socket):
+    """
+    the function sends to the client the players score list (from highest to lowest)
+    :param conn: socket object that is used to communicate with the client
+    """
+    global users
+    # get sorted users, dictionary pairs by their score
+    sorted_users = sorted(users.items(), key=lambda x: x[1]["score"], reverse=True)
+
+    # build the message to send to the client
+    scores = ""
+    for user in sorted_users:
+        scores += user[0] + ": " + str(user[1]["score"]) + "\n"
+
+    build_and_send_message(conn, PROTOCOL_SERVER["all_score_msg"], scores)
+
+
+def handle_logged_message(conn: socket):
+    """
+    the function sends to the client the players that are currently logged in
+    :param conn: socket object that is used to communicate with the client
+    """
+    global logged_users
+
+    # build the message of current users to send to the client
+    logged = ""
+    for client_address in logged_users.keys():
+        logged += logged_users[client_address] + ", "
+
+    build_and_send_message(conn, PROTOCOL_SERVER["logged_answer_msg"], logged)
 
 
 def handle_logout_message(conn: socket):
@@ -35,11 +67,12 @@ def handle_logout_message(conn: socket):
     the function closes the given socket, in later chapters, it removes the user from logged_users dictionary
     :param conn: socket object that is used to communicate with the client
     """
-
     global logged_users
 
-    conn.close()
+    # remove user from logged users after successful logout
     logged_users.pop(conn.getpeername())
+
+    conn.close()
 
 
 def handle_login_message(conn: socket, data: str) -> None:
@@ -51,7 +84,7 @@ def handle_login_message(conn: socket, data: str) -> None:
     """
 
     global users  # This is needed to access the same users dictionary from all functions
-    global logged_users  # To be used later
+    global logged_users
 
     cmd, message = chatlib.parse_message(data)
     message_fields = chatlib.split_data(message, 1)
@@ -77,7 +110,7 @@ def handle_login_message(conn: socket, data: str) -> None:
     build_and_send_message(conn, PROTOCOL_SERVER["login_ok_msg"], "")
 
     # add user to logged users after successful login
-    # logged_users[conn.getpeername()] = username
+    logged_users[conn.getpeername()] = username
 
 
 def handle_client_message(conn: socket, cmd: str, data: str) -> None:
@@ -87,20 +120,32 @@ def handle_client_message(conn: socket, cmd: str, data: str) -> None:
     :param cmd: a string representing the code field in the protocol
     :param data: a string representing the message field in the protocol
     """
+    global logged_users
 
-    global logged_users  # To be used later
-
+    # get the full message from the client
     full_message = chatlib.build_message(cmd, data)
 
-    # handle user login command
-    if cmd == PROTOCOL_CLIENT["login_msg"]:
-        handle_login_message(conn, full_message)
+    # if user is not logged in
+    if conn.getpeername() not in logged_users:
+        # handle user login command
+        if cmd == PROTOCOL_CLIENT["login_msg"]:
+            handle_login_message(conn, full_message)
+        else:
+            # send an error message of unrecognized command
+            send_error(conn, "command is not recognized!")
 
-    elif cmd == PROTOCOL_CLIENT["logout_msg"]:
-        handle_logout_message(conn)
-    else:
-        # send an error message of unrecognized command
-        send_error(conn, "command is not recognized!")
+    else:  # todo: MAKE BETTER!
+        if cmd == PROTOCOL_CLIENT["logout_msg"]:
+            handle_logout_message(conn)
+        elif cmd == PROTOCOL_CLIENT["my_score_msg"]:
+            handle_getscore_message(conn, logged_users[conn.getpeername()])
+        elif cmd == PROTOCOL_CLIENT["highscore_msg"]:
+            handle_highscore_message(conn)
+        elif cmd == PROTOCOL_CLIENT["logged_msg"]:
+            handle_logged_message(conn)
+        else:
+            # send an error message of unrecognized command
+            send_error(conn, "command is not recognized!")
 
 
 def main():
@@ -111,6 +156,7 @@ def main():
     # Initializes global users and questions dictionaries using load functions, will be used later
     global users
     global questions
+    global logged_users
 
     users = load_user_database()
     questions = load_questions()
@@ -128,6 +174,17 @@ def main():
             # get client message and separate fields
             cmd, data = recv_message_and_parse(client_socket)
 
+            # ------handle ctrl c (cmd and data are None)-----
+            if cmd is None and data is None:
+                logged_users.pop(client_socket.getpeername())
+                client_socket.close()
+                print("[SERVER] ", "user has disconnected forcibly, waiting for a new connection")
+
+                (client_socket, client_address) = server_socket.accept()
+                print("[SERVER] ", "new user has connected")
+                continue
+            # -----------------------------------------------
+
             if cmd == PROTOCOL_CLIENT["logout_msg"]:
                 # handle logout message
                 handle_client_message(client_socket, cmd, data)
@@ -138,14 +195,16 @@ def main():
 
                 (client_socket, client_address) = server_socket.accept()
                 print("[SERVER] ", "new user has connected")
+                continue
 
             # handle client message accordingly
             handle_client_message(client_socket, cmd, data)
 
-        # handle a case of an existing connection that was forcibly closed by the remote host (cmd and data are None)
+        # handle a case of an existing connection that was forcibly closed by the remote host
         except:
+            logged_users.pop(client_socket.getpeername())
             client_socket.close()
-            print("[SERVER] ", "user has disconnected, waiting for a new connection")
+            print("[SERVER] ", "user has disconnected forcibly, waiting for a new connection")
 
             (client_socket, client_address) = server_socket.accept()
             print("[SERVER] ", "new user has connected")
