@@ -17,15 +17,6 @@ logged_users = {}  # a dictionary of client hostnames to usernames
 messages_to_send = []  # a list of messages to send to clients
 
 
-def print_client_sockets(client_sockets: list[socket]) -> None:
-    """
-    the function prints the currently connected client sockets
-    :param client_sockets: a list of the connected client sockets
-    """
-    for client in client_sockets:
-        print("\t", client.getpeername())
-
-
 def build_and_send_message(conn: socket, cmd: str, msg: str) -> None:
     """
     the function builds a new message using chatlib, wanted code and message.
@@ -38,7 +29,6 @@ def build_and_send_message(conn: socket, cmd: str, msg: str) -> None:
 
     # building a message by protocol with build_message()
     full_message = chatlib.build_message(cmd, msg)
-
     print("[SERVER] ", full_message)
 
     # add outgoing message to messages_to_send list
@@ -260,6 +250,15 @@ def handle_client_message(conn: socket, cmd: str, data: str) -> None:
             send_error(conn, "command is not recognized!")
 
 
+def print_client_sockets(client_sockets: list[socket]) -> None:
+    """
+    the function prints the currently connected client sockets
+    :param client_sockets: a list of the connected client sockets
+    """
+    for client in client_sockets:
+        print("\t", client.getpeername())
+
+
 def manage_existing_client(current_socket: socket, client_sockets: list[socket]) -> tuple[socket, list[socket]]:
     """
     the function gets a socket of an existing client and a list of all client sockets and handles the client's message
@@ -271,7 +270,7 @@ def manage_existing_client(current_socket: socket, client_sockets: list[socket])
         # get client message and separate fields
         cmd, data = recv_message_and_parse(current_socket)
 
-        # ------handle ctrl c (cmd and data are None)-----
+        # handle ctrl c (cmd and data are None)
         if cmd is None and data is None:
             logged_users.pop(current_socket.getpeername())
             client_sockets.remove(current_socket)  # remove exiting client from client_sockets list
@@ -284,8 +283,8 @@ def manage_existing_client(current_socket: socket, client_sockets: list[socket])
 
             current_socket.close()
             print("[SERVER] ", "user has disconnected, waiting for a new connection")
+        # handle client message accordingly
         else:
-            # handle client message accordingly
             handle_client_message(current_socket, cmd, data)
 
     # handle a case of an existing connection that was forcibly closed by the remote host
