@@ -5,7 +5,6 @@ Change Log: creation - 15/10/2023
 """
 
 import socket
-
 import chatlib
 from constants import MAX_MSG_LENGTH, SERVER_IP, SERVER_PORT
 
@@ -31,7 +30,7 @@ def recv_message_and_parse(conn: socket) -> tuple[str, str]:
 # Data Loaders:
 def load_questions():
     """
-    the function loads questions bank from file	## FILE SUPPORT TO BE ADDED LATER
+    the function loads questions bank
     :return: questions dictionary
     """
 
@@ -46,7 +45,7 @@ def load_questions():
 
 def load_user_database():
     """
-    the function loads users list from file ## FILE SUPPORT TO BE ADDED LATER
+    the function loads users list
     :return: user dictionary
     """
 
