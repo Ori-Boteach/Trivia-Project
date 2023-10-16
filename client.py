@@ -81,11 +81,12 @@ def print_question(data: str) -> list[str]:
     return question_fields
 
 
-def send_user_answer(conn, question_fields) -> None:
+def send_user_answer(conn, question_fields) -> bool:
     """
     the function send user's answer and print correlating response
     :param conn: socket object that is used to communicate with the server
     :param question_fields: the different parts of the question
+    :return: True if the user's answer was correct, False otherwise -> for testing
     """
     user_answer = input("what do you think is the right answer [1-4]? ")
     full_answer = question_fields[0] + "#" + user_answer
@@ -93,15 +94,18 @@ def send_user_answer(conn, question_fields) -> None:
 
     if msg_code == PROTOCOL_SERVER["correct_answer_msg"]:
         print("You are right!")
+        return True
 
     if msg_code == PROTOCOL_SERVER["wrong_answer_msg"]:
         print(f"You are wrong! the correct answer is #{data}")
+        return False
 
 
-def play_question(conn: socket) -> None:
+def play_question(conn: socket) -> bool:
     """
     the function lets the user answer a question, shows correct answer if wrong and updates score if not
     :param conn: socket object that is used to communicate with the server
+    :return: True if the user's answer was correct, False otherwise -> for testing
     """
     # get the trivia question from the server
     msg_code, data = build_send_recv_parse(conn, PROTOCOL_CLIENT["get_question_msg"], "")
@@ -111,7 +115,7 @@ def play_question(conn: socket) -> None:
 
     question_fields = print_question(data)
 
-    send_user_answer(conn, question_fields)
+    return send_user_answer(conn, question_fields)
 
 
 def main():
