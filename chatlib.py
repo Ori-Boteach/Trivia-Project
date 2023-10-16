@@ -4,15 +4,13 @@ File Name: chatlib
 Change Log: creation - 12/10/2023
 """
 
-from typing import List
-
 from constants import *
 from validators import build_validator, initial_parser_validator, parser_fields_validator
 
 
 def build_message(cmd: str, data: str) -> str:
     """
-    Gets command name (str) and message field (str) and creates a valid protocol message
+    the function gets command name and message field and creates a valid protocol message
     :param cmd: the command name
     :param data: the message field
     :return: str of the full message, or None if error occurred
@@ -36,11 +34,11 @@ def build_message(cmd: str, data: str) -> str:
     return full_msg
 
 
-def parse_message(data: str):
+def parse_message(data: str) -> tuple[str, str]:
     """
-    Parses protocol message and returns command name and data field
+    the function parses protocol message and returns command name and data field
     :param data: a full inputted message
-    :return: cmd (str), data (str). If some error occurred, returns None, None
+    :return: cmd and data. If some error occurred, returns None, None
     """
 
     # validate delimiter count and whole data length
@@ -53,9 +51,7 @@ def parse_message(data: str):
     # separating the data to it's fields
     subfields = data.split(DELIMITER)
 
-    cmd = subfields[0]
-    length = subfields[1]
-    message = subfields[2]
+    cmd, length, message = subfields
 
     # validate field's lengths and contents
     try:
@@ -70,10 +66,10 @@ def parse_message(data: str):
     return cmd, message
 
 
-def split_data(msg: str, expected_delimiters: int) -> List[str]:
+def split_data(msg: str, expected_delimiters: int) -> list[str]:
     """
     Helper method. gets a string of the message field and number of expected delimiters in it. Splits the string
-    using protocol's message field delimiter (#) and validates that there are correct number of fields.
+    using protocol's message field delimiter (#) and validates that there are correct number of fields
     :param msg: the message field
     :param expected_delimiters: number of expected delimiters in it
     :return: list of fields if all ok. If some error occurred, returns None
@@ -85,9 +81,9 @@ def split_data(msg: str, expected_delimiters: int) -> List[str]:
     return [ERROR_RETURN]
 
 
-def join_data(msg_fields: List[str]) -> str:
+def join_data(msg_fields: list[str]) -> str:
     """
-    Helper method. Gets a list, joins all of its fields to one string divided by the data delimiter.
+    Helper method. Gets a list, joins all of its fields to one string divided by the data delimiter
     :param msg_fields: a list representing subfields in the message field
     :return: string that looks like cell1#cell2#cell3
     """

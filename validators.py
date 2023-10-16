@@ -8,7 +8,7 @@ from constants import *
 from custom_exceptions import NoneExistingProtocol, InvalidFieldLength, InvalidDelimiterCount, InvalidLengthField
 
 
-def build_validator(cmd: str, data: str):
+def build_validator(cmd: str, data: str) -> None:
     """
     the function performs validations for the build function (length and valid command)
     :param cmd: the inputted command field
@@ -22,7 +22,7 @@ def build_validator(cmd: str, data: str):
         raise NoneExistingProtocol
 
 
-def initial_parser_validator(data: str):
+def initial_parser_validator(data: str) -> None:
     """
     the function performs initial validations on the given data (delimiter count and length)
     :param data: the whole inputted protocol data
@@ -35,7 +35,7 @@ def initial_parser_validator(data: str):
         raise InvalidFieldLength
 
 
-def parser_fields_validator(cmd: str, length: str, message: str):
+def parser_fields_validator(cmd: str, length: str, message: str) -> None:
     """
     the function performs more validations on the inputted data (lengths, valid command and length fields)
     :param cmd: the inputted command field
