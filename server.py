@@ -154,12 +154,28 @@ def handle_login_message(conn: socket, data: str) -> None:
     logged_users[conn.getpeername()] = message_fields[0]
 
 
-def create_random_question() -> str:
+def create_question(username: str) -> str:
     """
     the function builds a random question (by protocol) from the questions' dictionary
     :return: the random question message field
     """
+
+    # check if the user has been asked all the questions
+    if len(users[username]["questions_asked"]) == len(questions):
+        return ""
+
+    # get a question the user hasn't been asked yet
+    found_question = False
     id, question = random.choice(list(questions.items()))
+    while not found_question:
+        if id not in users[username]["questions_asked"]:
+            found_question = True
+        else:
+            id, question = random.choice(list(questions.items()))
+
+    # add the question to the user's asked questions
+    users[username]["questions_asked"].append(id)
+
     answers = question["answers"]
     question_message_field = str(id) + DATA_DELIMITER + question["question"] + DATA_DELIMITER + answers[0] \
                              + DATA_DELIMITER + answers[1] + DATA_DELIMITER + answers[2] + DATA_DELIMITER + answers[3]
@@ -167,12 +183,17 @@ def create_random_question() -> str:
     return question_message_field
 
 
-def handle_question_message(conn: socket) -> None:
+def handle_question_message(conn: socket, username: str) -> None:
     """
     the function sends with provided socket a random question, by protocol, to the client
     :param conn: socket object that is used to communicate with the client
+    :param username: a string representing client's username
     """
-    build_and_send_message(conn, PROTOCOL_SERVER["your_question_msg"], create_random_question())
+    question = create_question(username)
+    if question == "":  # no more questions to ask
+        build_and_send_message(conn, PROTOCOL_SERVER["no_questions_msg"], "")
+    else:
+        build_and_send_message(conn, PROTOCOL_SERVER["your_question_msg"], question)
 
 
 def handle_answer_message(conn: socket, data: str) -> None:
@@ -215,7 +236,7 @@ def handle_client_message(conn: socket, cmd: str, data: str) -> None:
         PROTOCOL_CLIENT["my_score_msg"]: lambda: handle_getscore_message(conn, logged_users[conn.getpeername()]),
         PROTOCOL_CLIENT["highscore_msg"]: lambda: handle_highscore_message(conn),
         PROTOCOL_CLIENT["logged_msg"]: lambda: handle_logged_message(conn),
-        PROTOCOL_CLIENT["get_question_msg"]: lambda: handle_question_message(conn),
+        PROTOCOL_CLIENT["get_question_msg"]: lambda: handle_question_message(conn, logged_users[conn.getpeername()]),
         PROTOCOL_CLIENT["send_answer_msg"]: lambda: handle_answer_message(conn, data),
     }
 
