@@ -3,7 +3,7 @@ Author: Ori Boteach
 File Name: server_helpers
 Change Log: creation - 15/10/2023
 """
-
+import json
 import socket
 import chatlib
 from constants import MAX_MSG_LENGTH, SERVER_IP, SERVER_PORT
@@ -30,30 +30,35 @@ def recv_message_and_parse(conn: socket) -> tuple[str, str]:
 # Data Loaders:
 def load_questions():
     """
-    the function loads questions bank
+    the function loads the questions list from the file database (json file for structured data!)
+    (the questions in the file are in an array for scaling and suitability and converted to a dictionary)
     :return: questions dictionary
     """
-
-    questions_dict = {
-        2313: {"question": "How much is 2+2", "answers": ["3", "4", "2", "1"], "correct": 2},
-        4122: {"question": "What is the capital of France?", "answers": ["Lion", "Marseille", "Paris", "Montpellier"],
-               "correct": 3}
-    }
+    try:
+        with open("databases/questions.json", "r") as file:
+            questions = json.load(file)
+            # convert questions json list to dictionary
+            questions_dict = {question["id"]: {
+                "question": question["question"],
+                "answers": question["answers"],
+                "correct": question["correct"]} for question in questions}
+    except FileNotFoundError:
+        questions_dict = {}
 
     return questions_dict
 
 
 def load_user_database():
     """
-    the function loads users list
+    the function loads the users dict from the file database (json file for structured data!)
     :return: user dictionary
     """
+    try:
+        with open("databases/users.json", "r") as file:
+            users_dict = json.load(file)
+    except FileNotFoundError:
+        users_dict = {}
 
-    users_dict = {
-        "test": {"password": "test", "score": 0, "questions_asked": []},
-        "yossi": {"password": "123", "score": 50, "questions_asked": []},
-        "master": {"password": "master", "score": 200, "questions_asked": []}
-    }
     return users_dict
 
 
