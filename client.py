@@ -5,7 +5,6 @@ Change Log: creation - 12/10/2023
 """
 
 import socket
-
 from chatlib import *
 from client_helper_functions import build_send_recv_parse, error_and_exit, connect, login, logout
 
@@ -119,7 +118,6 @@ def main():
     """
     the main function in the client module
     """
-
     server_connection = connect()
     login(server_connection)
 
@@ -134,11 +132,9 @@ def main():
     while not user_exit:
         user_input = input("what do you want to do?\n a. logout\n b. see your current score\n"
                            " c. see high scores\n d. play a question\n e. see logged users\n").lower()
-
         # if user chose to exit
         if user_input.lower() == "a":
             user_exit = True
-
         elif user_input in menu_options:
             menu_options[user_input]()
         else:

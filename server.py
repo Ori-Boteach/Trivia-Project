@@ -205,8 +205,8 @@ def handle_answer_message(conn: socket, data: str) -> None:
     global users
     split_message = chatlib.split_data(data, 1)
 
-    # validate client's response message field
-    if split_message == [ERROR_RETURN]:
+    # validate client's response message field and check for an INTEGER ANSWER
+    if split_message == [ERROR_RETURN] or not split_message[1].isdigit():
         send_error(conn, "error occurred trying to understand your message!")
         return
 
