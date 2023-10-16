@@ -6,7 +6,7 @@ Change Log: creation - 12/10/2023
 
 import socket
 from chatlib import *
-from client_helper_functions import build_send_recv_parse, error_and_exit, connect, login, logout
+from client_helpers import build_send_recv_parse, error_and_exit, connect, login, logout
 
 
 def get_score(conn: socket) -> None:
