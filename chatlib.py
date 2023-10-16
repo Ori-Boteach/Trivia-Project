@@ -5,7 +5,7 @@ Change Log: creation - 12/10/2023
 """
 
 from constants import *
-from validators import build_validator, initial_parser_validator, parser_fields_validator
+from chatlib_validators import build_validator, initial_parser_validator, parser_fields_validator
 
 
 def build_message(cmd: str, data: str) -> str:
