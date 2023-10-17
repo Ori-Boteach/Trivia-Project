@@ -8,7 +8,7 @@ import socket
 import select
 import chatlib
 from constants import PROTOCOL_CLIENT, ERROR_RETURN, PROTOCOL_SERVER, ERROR_MSG, DATA_DELIMITER
-from server_helpers import load_user_database, load_questions, setup_socket, recv_message_and_parse
+from server_helpers import load_user_database, load_questions, setup_socket, recv_message_and_parse, load_web_questions
 
 # GLOBAL variables
 users = {}
@@ -306,7 +306,7 @@ def main():
     client_sockets = []
 
     users = load_user_database()
-    questions = load_questions()
+    questions = load_web_questions()
 
     print("Welcome to Trivia Server!\nStarting up on port 5678")
 
