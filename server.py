@@ -180,13 +180,14 @@ def handle_answer_message(conn: socket, data: str) -> None:
     global users
     split_message = chatlib.split_data(data, 1)
 
-    # validate client's response message field (like for containing #) and check for one of the possible answers
-    if split_message == [ERROR_RETURN] or split_message[1] not in ["1", "2", "3", "4"]:
+    # validate client's response message field
+    if split_message == [ERROR_RETURN]:
         send_error(conn, "error occurred trying to understand your message!")
         return
 
-    question_id, user_answer = map(int, split_message[:2])  # apply int() to first two elements of the list
-    correct_answer = questions[question_id]["correct"]
+    question_id = int(split_message[0])
+    user_answer = split_message[1]
+    correct_answer = str(questions[question_id]["correct"])
 
     # check if the answer is correct
     if user_answer == correct_answer:
@@ -195,7 +196,7 @@ def handle_answer_message(conn: socket, data: str) -> None:
         users[answering_user]["score"] += 5
         build_and_send_message(conn, PROTOCOL_SERVER["correct_answer_msg"], "")
     else:  # send wrong answer message
-        build_and_send_message(conn, PROTOCOL_SERVER["wrong_answer_msg"], str(correct_answer))
+        build_and_send_message(conn, PROTOCOL_SERVER["wrong_answer_msg"], correct_answer)
 
 
 def handle_client_message(conn: socket, cmd: str, data: str) -> None:

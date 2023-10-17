@@ -5,7 +5,7 @@ Change Log: creation - 15/10/2023
 """
 import socket
 import chatlib
-from constants import MAX_MSG_LENGTH, SERVER_IP, SERVER_PORT, PROTOCOL_SERVER
+from constants import MAX_MSG_LENGTH, SERVER_IP, SERVER_PORT, PROTOCOL_SERVER, PROTOCOL_CLIENT
 
 messages_to_send = []  # a list of messages to send to clients
 
@@ -46,6 +46,11 @@ def recv_message_and_parse(conn: socket) -> tuple[str, str]:
              If error occurred, will return None, None
     """
     full_message = conn.recv(MAX_MSG_LENGTH).decode()
+
+    # handle an edge case where the client sends a trivia answer containing a '|' or '#'
+    # in this case, the message will be replaced to a random id and empty answer, surly incorrect
+    if full_message.count(PROTOCOL_CLIENT["send_answer_msg"]) == 1 and (full_message.count("|") > 2 or full_message.count("#") > 1):
+        return PROTOCOL_CLIENT["send_answer_msg"], "1#"
 
     print("[CLIENT] ", full_message)  # debug print
 

@@ -36,14 +36,65 @@ def load_questions() -> dict:
     return questions_dict
 
 
+def format_web_question(question: dict, answers: list, correct_answer: str, formatted_questions: list) -> dict:
+    """
+    The function formats a single question from the web API to the correct structure
+    :param question: the question to format
+    :param answers: the answers to the question
+    :param correct_answer: the correct answer to the question
+    :param formatted_questions: the list of already formatted questions
+    :return: the formatted question
+    """
+    question["question"] = question["question"].replace("&quot;", "\"")
+    answers = [answer.replace("&quot;", "\"") for answer in answers]
+
+    # check if the question or answers contain the '#' character and remove it
+    question["question"] = question["question"].replace("#", "")
+    answers = [answer.replace("#", "") for answer in answers]
+    correct_answer = correct_answer.replace("#", "")
+
+    formatted_question = {
+        "id": len(formatted_questions) + 1,
+        "question": question["question"],
+        "answers": answers,
+        "correct": answers.index(correct_answer) + 1  # position of the correct answer
+    }
+
+    return formatted_question
+
+
+def handle_web_question(question: dict, formatted_questions: list) -> list:
+    """
+    The function handles a single question and adds it to the formatted questions list
+    :param question: the current question from the web
+    :param formatted_questions: the list of formatted questions
+    :return: the new formatted questions list
+    """
+    # shuffle the answers
+    correct_answer = question["correct_answer"]
+    incorrect_answers = question["incorrect_answers"]
+    answers = [correct_answer] + incorrect_answers
+    random.shuffle(answers)
+
+    # format the question
+    formatted_question = format_web_question(question, answers, correct_answer, formatted_questions)
+
+    # don't add a question if it contains the '&' character
+    if formatted_question["question"].count("&") == 0 and all(
+            answer.count("&") == 0 for answer in formatted_question["answers"]):
+        formatted_questions.append(formatted_question)
+
+    return formatted_questions
+
+
 def load_web_questions() -> dict:
     """
-    the function loads questions from the web api and structures them correctly in the questions' dictionary
-    :return: questions dictionary
+    Load questions from the web API and structure them correctly in the questions' dictionary.
+    :return: Questions dictionary
     """
     url = 'https://opentdb.com/api.php?amount=50&type=multiple'
     try:
-        # get data from web url and parse json data to dict
+        # get data from the web URL and parse JSON data to a dictionary
         response = requests.get(url)
         response.raise_for_status()  # raise an exception if the request was not successful
         questions_dict = response.json()
@@ -52,29 +103,9 @@ def load_web_questions() -> dict:
         questions = questions_dict['results']
         formatted_questions = []
         for question in questions:
+            formatted_questions = handle_web_question(question, formatted_questions)
 
-            # shuffle the answers
-            correct_answer = question["correct_answer"]
-            incorrect_answers = question["incorrect_answers"]
-            answers = [correct_answer] + incorrect_answers
-            random.shuffle(answers)
-
-            # check if the question or answers contain the '#' character and rewrite ''
-            if question["question"].count("#") > 0 or answers.count("#") > 0:
-                continue
-            question["question"] = question["question"].replace("&quot;", "\"")
-            answers = [answer.replace("&quot;", "\"") for answer in answers]
-            correct_answer = correct_answer.replace("&quot;", "\"")
-
-            formatted_question = {
-                "id": len(formatted_questions) + 1,
-                "question": question["question"],
-                "answers": answers,
-                "correct": answers.index(correct_answer) + 1  # Position of the correct answer
-            }
-            formatted_questions.append(formatted_question)
-
-        # convert questions list to dictionary
+        # convert questions list to a dictionary
         formatted_questions_dict = {question["id"]: question for question in formatted_questions}
 
     except requests.exceptions.RequestException as e:
