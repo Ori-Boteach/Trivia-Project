@@ -52,7 +52,7 @@ def connect() -> socket:
     return client_socket
 
 
-def error_and_exit(error_msg) -> None:
+def error_and_exit(error_msg: str) -> None:
     """
     the function prints the given error message and exits the program
     (SPECIFIED TO DO WITH exit()!)
