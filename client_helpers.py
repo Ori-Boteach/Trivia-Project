@@ -1,6 +1,6 @@
 """
 Author: Ori Boteach
-File Name: client_helper_functions
+File Name: client_helpers
 Change Log: creation - 12/10/2023
 """
 
@@ -40,6 +40,19 @@ def recv_message_and_parse(conn: socket) -> tuple[str, str]:
     full_message = conn.recv(1024).decode()
 
     return chatlib.parse_message(full_message)
+
+
+def build_send_recv_parse(conn: socket, cmd: str, data: str) -> tuple[str, str]:
+    """
+    the function sends a message to the server by the known protocol and returns the answer
+    :param conn: socket object that is used to communicate with the server
+    :param cmd: the command of the message
+    :param data: the data of the message
+    :return: the answer from the server (command and data)
+    """
+    build_and_send_message(conn, cmd, data)
+    msg_code, data = recv_message_and_parse(conn)
+    return msg_code, data
 
 
 def connect() -> socket:
@@ -95,16 +108,3 @@ def logout(conn: socket) -> None:
     """
     build_and_send_message(conn, PROTOCOL_CLIENT["logout_msg"], "")
     print("Goodbye!")
-
-
-def build_send_recv_parse(conn: socket, cmd: str, data: str) -> tuple[str, str]:
-    """
-    the function sends a message to the server by the known protocol and returns the answer
-    :param conn: socket object that is used to communicate with the server
-    :param cmd: the command of the message
-    :param data: the data of the message
-    :return: the answer from the server (command and data)
-    """
-    build_and_send_message(conn, cmd, data)
-    msg_code, data = recv_message_and_parse(conn)
-    return msg_code, data
