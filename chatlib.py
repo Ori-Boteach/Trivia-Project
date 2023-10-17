@@ -75,6 +75,7 @@ def split_data(msg: str, expected_delimiters: int) -> list[str]:
     :return: list of fields if all ok. If some error occurred, returns None
     """
 
+    # validate number of delimiters is as expected
     if msg.count(DATA_DELIMITER) == expected_delimiters:
         return msg.split(DATA_DELIMITER)
 
@@ -87,4 +88,10 @@ def join_data(msg_fields: list[str]) -> str:
     :param msg_fields: a list representing subfields in the message field
     :return: string that looks like cell1#cell2#cell3
     """
-    return "#".join(msg_fields)
+    message_field = DATA_DELIMITER.join(msg_fields)
+
+    # validate message field length doesnt exceed maximum
+    if len(message_field) > MAX_DATA_LENGTH:
+        return ERROR_RETURN
+
+    return message_field
