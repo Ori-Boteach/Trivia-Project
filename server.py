@@ -8,40 +8,14 @@ import socket
 import select
 import chatlib
 from constants import PROTOCOL_CLIENT, ERROR_RETURN, PROTOCOL_SERVER, ERROR_MSG, DATA_DELIMITER
-from server_helpers import load_user_database, load_questions, setup_socket, recv_message_and_parse, load_web_questions
+from server_helpers import setup_socket, recv_message_and_parse, build_and_send_message, send_error, messages_to_send, \
+    print_client_sockets
+from server_data_loaders import load_user_database, load_web_questions
 
 # GLOBAL variables
 users = {}
 questions = {}
 logged_users = {}  # a dictionary of client hostnames to usernames
-messages_to_send = []  # a list of messages to send to clients
-
-
-def build_and_send_message(conn: socket, cmd: str, msg: str) -> None:
-    """
-    the function builds a new message using chatlib, wanted code and message.
-    Prints debug info, then sends it to the given socket
-    :param conn: socket object that is used to communicate with the client
-    :param cmd: the command name
-    :param msg: the message field
-    """
-    global messages_to_send
-
-    # building a message by protocol with build_message()
-    full_message = chatlib.build_message(cmd, msg)
-    print("[SERVER] ", full_message)
-
-    # add outgoing message to messages_to_send list
-    messages_to_send.append((conn, full_message.encode()))
-
-
-def send_error(conn: socket, error_msg: str) -> None:
-    """
-    the function sends an error response with the given message
-    :param conn: socket object that is used to communicate with the client
-    :param error_msg: a string representing the error
-    """
-    build_and_send_message(conn, PROTOCOL_SERVER["login_failed_msg"], error_msg)
 
 
 def handle_getscore_message(conn: socket, username: str) -> None:
@@ -144,6 +118,23 @@ def handle_login_message(conn: socket, data: str) -> None:
     logged_users[conn.getpeername()] = message_fields[0]
 
 
+def return_unseen_questions(username: str) -> tuple[int, dict]:
+    """
+    the function returns a random question that the user hasn't been asked yet
+    :param username: the username of the asking client
+    :return: question id and dictionary
+    """
+    found_question = False
+    id, question = random.choice(list(questions.items()))
+    while not found_question:
+        if id not in users[username]["questions_asked"]:
+            found_question = True
+        else:
+            id, question = random.choice(list(questions.items()))
+
+    return id, question
+
+
 def create_question(username: str) -> str:
     """
     the function builds a random question (by protocol) from the questions' dictionary
@@ -155,13 +146,7 @@ def create_question(username: str) -> str:
         return ""
 
     # get a question the user hasn't been asked yet
-    found_question = False
-    id, question = random.choice(list(questions.items()))
-    while not found_question:
-        if id not in users[username]["questions_asked"]:
-            found_question = True
-        else:
-            id, question = random.choice(list(questions.items()))
+    id, question = return_unseen_questions(username)
 
     # add the question to the user's asked questions
     users[username]["questions_asked"].append(id)
@@ -195,8 +180,8 @@ def handle_answer_message(conn: socket, data: str) -> None:
     global users
     split_message = chatlib.split_data(data, 1)
 
-    # validate client's response message field and check for an INTEGER ANSWER
-    if split_message == [ERROR_RETURN] or not split_message[1].isdigit():
+    # validate client's response message field (like for containing #) and check for one of the possible answers
+    if split_message == [ERROR_RETURN] or split_message[1] not in ["1", "2", "3", "4"]:
         send_error(conn, "error occurred trying to understand your message!")
         return
 
@@ -250,15 +235,6 @@ def handle_client_message(conn: socket, cmd: str, data: str) -> None:
             send_error(conn, "command is not recognized!")
 
 
-def print_client_sockets(client_sockets: list[socket]) -> None:
-    """
-    the function prints the currently connected client sockets
-    :param client_sockets: a list of the connected client sockets
-    """
-    for client in client_sockets:
-        print("\t", client.getpeername())
-
-
 def manage_existing_client(current_socket: socket, client_sockets: list[socket]) -> tuple[socket, list[socket]]:
     """
     the function gets a socket of an existing client and a list of all client sockets and handles the client's message
@@ -302,7 +278,7 @@ def main():
     the main function in the server module
     """
     # initializes global users and questions dictionaries using load functions
-    global users, questions, logged_users, messages_to_send
+    global users, questions, logged_users
     client_sockets = []
 
     users = load_user_database()
