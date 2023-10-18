@@ -14,6 +14,7 @@ def build_message(cmd: str, data: str) -> str:
     :param cmd: the command name
     :param data: the message field
     :return: str of the full message, or None if error occurred
+    :except: ERROR_RETURN if InvalidFieldLength or NoneExistingProtocol errors occurred
     """
 
     # validating inputs
@@ -39,6 +40,8 @@ def parse_message(data: str) -> tuple[str, str]:
     the function parses protocol message and returns command name and data field
     :param data: a full inputted message
     :return: cmd and data. If some error occurred, returns None, None
+    :except: ERROR_RETURN, ERROR_RETURN if InvalidDelimiterCount or InvalidFieldLength errors occurred
+    :except: ERROR_RETURN, ERROR_RETURN if InvalidFieldLength, NoneExistingProtocol or InvalidLengthField errors
     """
 
     # validate delimiter count and whole data length
@@ -68,11 +71,11 @@ def parse_message(data: str) -> tuple[str, str]:
 
 def split_data(msg: str, expected_delimiters: int) -> list[str]:
     """
-    Helper method. gets a string of the message field and number of expected delimiters in it. Splits the string
-    using protocol's message field delimiter (#) and validates that there are correct number of fields
+    the function is a helper method. It gets a string of the message field and number of expected delimiters in it.
+    Splits the string using the message field delimiter (#) and validates that there are correct number of fields
     :param msg: the message field
     :param expected_delimiters: number of expected delimiters in it
-    :return: list of fields if all ok. If some error occurred, returns None
+    :return: a list of fields in message if all ok. if delimiter count is different, returns None
     """
 
     # validate number of delimiters is as expected
@@ -84,9 +87,9 @@ def split_data(msg: str, expected_delimiters: int) -> list[str]:
 
 def join_data(msg_fields: list[str]) -> str:
     """
-    Helper method. Gets a list, joins all of its fields to one string divided by the data delimiter
+    the function is a helper method. It gets a list, joins all of its fields to one string divided by the data delimiter
     :param msg_fields: a list representing subfields in the message field
-    :return: string that looks like cell1#cell2#cell3
+    :return: a string representing the whole message field. If length is too long, returns None
     """
     message_field = DATA_DELIMITER.join(msg_fields)
 

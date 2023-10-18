@@ -13,6 +13,8 @@ def load_questions() -> dict:
     the function loads the questions list from the file database (json file for structured data!)
     (the questions in the file are in an array for scaling and suitability and converted to a dictionary)
     :return: questions dictionary
+    :except: IOError if the file is not found or empty
+    :except: json.JSONDecodeError if the JSON data is not valid
     """
     try:
         with open("databases/questions.json", "r") as file:
@@ -92,6 +94,8 @@ def load_web_questions() -> dict:
     """
     Load questions from the web API and structure them correctly in the questions' dictionary.
     :return: Questions dictionary
+    :except: requests.exceptions.RequestException if the web API request was not successful
+    :except: json.JSONDecodeError if the JSON data is not valid
     """
     url = 'https://opentdb.com/api.php?amount=50&type=multiple'
     try:
@@ -110,7 +114,11 @@ def load_web_questions() -> dict:
         formatted_questions_dict = {question["id"]: question for question in formatted_questions}
 
     except requests.exceptions.RequestException as e:
-        print(f"An error occurred: {e}")
+        print(f"A web error occurred: {e}")
+        formatted_questions_dict = {}
+
+    except OSError as e:
+        print(f"An OS error occurred: {e}")
         formatted_questions_dict = {}
 
     except json.JSONDecodeError as e:
@@ -124,6 +132,8 @@ def load_user_database() -> dict:
     """
     the function loads the users dict from the file database (json file for structured data!)
     :return: user dictionary
+    :except: IOError if the file is not found or empty
+    :except: json.JSONDecodeError if the JSON data is not valid
     """
     try:
         with open("databases/users.json", "r") as file:

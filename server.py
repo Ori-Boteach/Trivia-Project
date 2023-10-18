@@ -265,6 +265,7 @@ def manage_existing_client(current_socket: socket, client_sockets: list[socket])
             handle_client_message(current_socket, cmd, data)
 
     # handle a case of an existing connection that was forcibly closed by the remote host
+    # a broad exception in order to catch all possible exceptions and prevent the server from crashing
     except:
         logged_users.pop(current_socket.getpeername())
         client_sockets.remove(current_socket)  # remove exiting client from client_sockets list
@@ -284,6 +285,11 @@ def main():
 
     users = load_user_database()
     questions = load_web_questions()
+
+    # check for a valid database load
+    if len(users) == 0 or len(questions) == 0:
+        print("Error loading users or questions from database")
+        return
 
     print("Welcome to Trivia Server!\nStarting up on port 5678")
 

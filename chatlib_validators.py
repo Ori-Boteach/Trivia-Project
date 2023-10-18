@@ -13,7 +13,8 @@ def build_validator(cmd: str, data: str) -> None:
     the function performs validations for the build function (length and valid command)
     :param cmd: the inputted command field
     :param data: the whole inputted protocol data
-    :return: raising the correct exception if needed
+    :raise: InvalidFieldLength if the fields lengths are incorrect
+    :raise: NoneExistingProtocol if the command doesn't exist
     """
     if len(data) > MAX_DATA_LENGTH or len(cmd) > CMD_FIELD_LENGTH:
         raise InvalidFieldLength
@@ -26,7 +27,8 @@ def initial_parser_validator(data: str) -> None:
     """
     the function performs initial validations on the given data (delimiter count and length)
     :param data: the whole inputted protocol data
-    :return: raising the correct exception if needed
+    :raise: InvalidDelimiterCount if the delimiter count is not two
+    :raise: InvalidFieldLength if the data length is incorrect
     """
     if data.count(DELIMITER) != 2:
         raise InvalidDelimiterCount
@@ -41,7 +43,9 @@ def parser_fields_validator(cmd: str, length: str, message: str) -> None:
     :param cmd: the inputted command field
     :param length: the inputted length field
     :param message: the inputted message field
-    :return: raising the correct exception if needed
+    :raise: InvalidFieldLength if the fields lengths are incorrect
+    :raise: NoneExistingProtocol if the command doesn't exist
+    :raise: InvalidLengthField if the length field isn't numeric
     """
     # validate fields lengths
     if len(cmd) != CMD_FIELD_LENGTH or len(length) != LENGTH_FIELD_LENGTH or len(message) > MAX_DATA_LENGTH:
