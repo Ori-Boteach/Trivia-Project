@@ -5,8 +5,8 @@ Change Log: creation - 12/10/2023
 """
 
 import socket
-import chatlib
 from asyncio.log import logger
+from chatlib import build_message, parse_message
 from constants import CLIENT_IP, SERVER_PORT, PROTOCOL_CLIENT, PROTOCOL_SERVER
 
 
@@ -20,9 +20,9 @@ def build_and_send_message(conn: socket, cmd: str, data: str) -> None:
     :return: Nothing
     """
     # building a message by protocol with build_message()
-    full_message = chatlib.build_message(cmd, data)
+    full_message = build_message(cmd, data)
 
-    # printing full_message as debug information
+    # printing full_message as debug information, course requirement!
     logger.debug(full_message)
 
     # sending the built message to the server
@@ -39,7 +39,7 @@ def recv_message_and_parse(conn: socket) -> tuple[str, str]:
     """
     full_message = conn.recv(1024).decode()
 
-    return chatlib.parse_message(full_message)
+    return parse_message(full_message)
 
 
 def build_send_recv_parse(conn: socket, cmd: str, data: str) -> tuple[str, str]:

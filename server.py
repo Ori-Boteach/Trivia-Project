@@ -6,11 +6,11 @@ Change Log: creation - 15/10/2023
 import random
 import socket
 import select
-import chatlib
-from constants import PROTOCOL_CLIENT, ERROR_RETURN, PROTOCOL_SERVER, ERROR_MSG, DATA_DELIMITER
-from server_helpers import setup_socket, recv_message_and_parse, build_and_send_message, send_error, messages_to_send, \
-    print_client_sockets
+from constants import *
+from chatlib import parse_message, split_data, build_message
 from server_data_loaders import load_user_database, load_web_questions
+from server_helpers import setup_socket, recv_message_and_parse, \
+    build_and_send_message, send_error, messages_to_send, print_client_sockets
 
 # GLOBAL variables:
 users = {}
@@ -102,8 +102,8 @@ def handle_login_message(conn: socket, data: str) -> None:
     :param conn: socket object that is used to communicate with the client
     :param data: a string representing the data sent by the username according to protocol
     """
-    cmd, message = chatlib.parse_message(data)
-    message_fields = chatlib.split_data(message, 1)
+    cmd, message = parse_message(data)
+    message_fields = split_data(message, 1)
 
     # validate the clients login for correct command, username and password
     if validate_login(conn, message_fields, cmd) == ERROR_MSG:
@@ -138,7 +138,6 @@ def create_question(username: str) -> str:
     the function builds a random question (by protocol) from the questions' dictionary
     :return: the random question message field
     """
-
     # check if the user has been asked all the questions
     if len(users[username]["questions_asked"]) == len(questions):
         return ""
@@ -194,7 +193,7 @@ def handle_answer_message(conn: socket, data: str) -> None:
     :param conn: socket object that is used to communicate with the client
     :param data: the message field the user sent with the SEND_ANSWER command
     """
-    split_message = chatlib.split_data(data, 1)
+    split_message = split_data(data, 1)
 
     # validate client's response message field
     if split_message == [ERROR_RETURN]:
@@ -227,7 +226,7 @@ def handle_client_message(conn: socket, cmd: str, data: str) -> None:
     }
 
     # get the full message from the client
-    full_message = chatlib.build_message(cmd, data)
+    full_message = build_message(cmd, data)
 
     # if user is not logged in
     if conn.getpeername() not in logged_users:
@@ -285,26 +284,35 @@ def manage_existing_client(current_socket: socket, client_sockets: list[socket])
     return current_socket, client_sockets
 
 
-def main():
+def start_server() -> socket:
     """
-    the main function in the server module
+    the function loads relevant data from and starts the server
+    :return: the server socket connection
     """
     # declare global dictionaries and load data to them
     global users, questions, logged_users
-    client_sockets = []
 
     users = load_user_database()
     questions = load_web_questions()
 
-    # check for a valid database load
+    print("Welcome to Trivia Server!\nStarting up on port 5678")
+
+    # setup server connection and return it
+    return setup_socket()
+
+
+def main():
+    """
+    the main function in the server module
+    """
+    # start server function - load data and start the server
+    server_socket = start_server()
+    client_sockets = []
+
+    # check for a valid database load and terminate server if not
     if len(users) == 0 or len(questions) == 0:
         print("Error loading users or questions from database")
         return
-
-    print("Welcome to Trivia Server!\nStarting up on port 5678")
-
-    # setup server connection
-    server_socket = setup_socket()
 
     while True:
         ready_to_read, ready_to_write, in_error = select.select([server_socket] + client_sockets, client_sockets, [])

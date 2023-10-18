@@ -3,10 +3,10 @@ Author: Ori Boteach
 File Name: client
 Change Log: creation - 12/10/2023
 """
-
 import socket
-from chatlib import *
+from chatlib import split_data
 from client_helpers import build_send_recv_parse, error_and_exit, connect, login, logout
+from constants import PROTOCOL_SERVER, PROTOCOL_CLIENT, QUESTION_FIELDS_NUMBER
 
 
 def get_score(conn: socket) -> None:
@@ -86,7 +86,7 @@ def send_user_answer(conn, question_fields) -> bool:
     the function send user's answer and print correlating response
     :param conn: socket object that is used to communicate with the server
     :param question_fields: the different parts of the question
-    :return: True if the user's answer was correct, False otherwise -> for testing
+    :return: True if the user's answer was correct, False otherwise -> ONLY for testing
     """
     user_answer = input("what do you think is the right answer [1-4]? ")
     full_answer = question_fields[0] + "#" + user_answer

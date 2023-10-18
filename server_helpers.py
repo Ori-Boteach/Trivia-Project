@@ -4,8 +4,8 @@ File Name: server_helpers
 Change Log: creation - 15/10/2023
 """
 import socket
-import chatlib
-from constants import MAX_MSG_LENGTH, SERVER_IP, SERVER_PORT, PROTOCOL_SERVER, PROTOCOL_CLIENT
+from constants import *
+from chatlib import build_message, parse_message
 
 # GLOBAL variable:
 messages_to_send = []  # a list of messages to send to clients
@@ -22,7 +22,7 @@ def build_and_send_message(conn: socket, cmd: str, msg: str) -> None:
     global messages_to_send  # declaring the global variable because it changes
 
     # building a message by protocol with build_message()
-    full_message = chatlib.build_message(cmd, msg)
+    full_message = build_message(cmd, msg)
     print("[SERVER] ", full_message)
 
     # add outgoing message to messages_to_send list
@@ -50,13 +50,13 @@ def recv_message_and_parse(conn: socket) -> tuple[str, str]:
 
     # handle an edge case where the client sends a trivia answer containing a '|' or '#'
     # in this case, the message will be replaced to a random id and empty answer, surly incorrect
-    if full_message.count(PROTOCOL_CLIENT["send_answer_msg"]) == 1 and\
+    if full_message.count(PROTOCOL_CLIENT["send_answer_msg"]) == 1 and \
             (full_message.count("|") > 2 or full_message.count("#") > 1):
         return PROTOCOL_CLIENT["send_answer_msg"], "1#"
 
     print("[CLIENT] ", full_message)  # debug print
 
-    cmd, data = chatlib.parse_message(full_message)
+    cmd, data = parse_message(full_message)
 
     return cmd, data
 
@@ -70,7 +70,6 @@ def print_client_sockets(client_sockets: list[socket]) -> None:
         print("\t", client.getpeername())
 
 
-# SOCKET CREATOR:
 def setup_socket() -> socket:
     """
     the function creates new listening socket and returns it
