@@ -7,6 +7,7 @@ import socket
 import chatlib
 from constants import MAX_MSG_LENGTH, SERVER_IP, SERVER_PORT, PROTOCOL_SERVER, PROTOCOL_CLIENT
 
+# GLOBAL variable:
 messages_to_send = []  # a list of messages to send to clients
 
 
@@ -18,7 +19,7 @@ def build_and_send_message(conn: socket, cmd: str, msg: str) -> None:
     :param cmd: the command name
     :param msg: the message field
     """
-    global messages_to_send
+    global messages_to_send  # declaring the global variable because it changes
 
     # building a message by protocol with build_message()
     full_message = chatlib.build_message(cmd, msg)
@@ -49,7 +50,8 @@ def recv_message_and_parse(conn: socket) -> tuple[str, str]:
 
     # handle an edge case where the client sends a trivia answer containing a '|' or '#'
     # in this case, the message will be replaced to a random id and empty answer, surly incorrect
-    if full_message.count(PROTOCOL_CLIENT["send_answer_msg"]) == 1 and (full_message.count("|") > 2 or full_message.count("#") > 1):
+    if full_message.count(PROTOCOL_CLIENT["send_answer_msg"]) == 1 and\
+            (full_message.count("|") > 2 or full_message.count("#") > 1):
         return PROTOCOL_CLIENT["send_answer_msg"], "1#"
 
     print("[CLIENT] ", full_message)  # debug print

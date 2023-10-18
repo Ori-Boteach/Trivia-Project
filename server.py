@@ -12,7 +12,7 @@ from server_helpers import setup_socket, recv_message_and_parse, build_and_send_
     print_client_sockets
 from server_data_loaders import load_user_database, load_web_questions
 
-# GLOBAL variables
+# GLOBAL variables:
 users = {}
 questions = {}
 logged_users = {}  # a dictionary of client hostnames to usernames
@@ -49,8 +49,6 @@ def handle_logged_message(conn: socket) -> None:
     the function sends to the client the players that are currently logged in
     :param conn: socket object that is used to communicate with the client
     """
-    global logged_users
-
     # build the message of current users to send to the client
     logged = ""
     for client_address in logged_users.keys():
@@ -64,7 +62,7 @@ def handle_logout_message(conn: socket) -> None:
     the function closes the given socket, in later chapters, it removes the user from logged_users dictionary
     :param conn: socket object that is used to communicate with the client
     """
-    global logged_users
+    global logged_users  # declaring the global variable because it changes
 
     # remove user from logged users and close connection after successful logout
     logged_users.pop(conn.getpeername())
@@ -171,13 +169,31 @@ def handle_question_message(conn: socket, username: str) -> None:
         build_and_send_message(conn, PROTOCOL_SERVER["your_question_msg"], question)
 
 
+def return_answer_response(conn, user_answer: str, correct_answer: str) -> None:
+    """
+    the function checks if the users answer is correct, responds accordingly and updates the users score if needed
+    :param conn: socket object that is used to communicate with the client
+    :param user_answer: the users answer to the question
+    :param correct_answer: the correct answer to the question
+    """
+    global users  # declaring the global variable because it may change
+
+    if user_answer == correct_answer:
+        # update user's score and send correct answer message
+        answering_user = logged_users[conn.getpeername()]
+        users[answering_user]["score"] += 5
+        build_and_send_message(conn, PROTOCOL_SERVER["correct_answer_msg"], "")
+
+    else:  # send wrong answer message
+        build_and_send_message(conn, PROTOCOL_SERVER["wrong_answer_msg"], correct_answer)
+
+
 def handle_answer_message(conn: socket, data: str) -> None:
     """
     the function checks if the users answer is correct one, responds accordingly and updates the users score
     :param conn: socket object that is used to communicate with the client
     :param data: the message field the user sent with the SEND_ANSWER command
     """
-    global users
     split_message = chatlib.split_data(data, 1)
 
     # validate client's response message field
@@ -189,14 +205,8 @@ def handle_answer_message(conn: socket, data: str) -> None:
     user_answer = split_message[1]
     correct_answer = str(questions[question_id]["correct"])
 
-    # check if the answer is correct
-    if user_answer == correct_answer:
-        # update user's score and send correct answer message
-        answering_user = logged_users[conn.getpeername()]
-        users[answering_user]["score"] += 5
-        build_and_send_message(conn, PROTOCOL_SERVER["correct_answer_msg"], "")
-    else:  # send wrong answer message
-        build_and_send_message(conn, PROTOCOL_SERVER["wrong_answer_msg"], correct_answer)
+    # check if the answer is correct and respond accordingly
+    return_answer_response(conn, user_answer, correct_answer)
 
 
 def handle_client_message(conn: socket, cmd: str, data: str) -> None:
@@ -257,9 +267,9 @@ def manage_existing_client(current_socket: socket, client_sockets: list[socket])
         elif cmd == PROTOCOL_CLIENT["logout_msg"]:
             handle_client_message(current_socket, cmd, data)  # handle logout message
             client_sockets.remove(current_socket)  # remove exiting client from client_sockets list
-
             current_socket.close()
             print("[SERVER] ", "user has disconnected, waiting for a new connection")
+
         # handle client message accordingly
         else:
             handle_client_message(current_socket, cmd, data)
@@ -279,7 +289,7 @@ def main():
     """
     the main function in the server module
     """
-    # initializes global users and questions dictionaries using load functions
+    # declare global dictionaries and load data to them
     global users, questions, logged_users
     client_sockets = []
 
