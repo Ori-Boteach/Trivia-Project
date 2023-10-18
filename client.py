@@ -151,6 +151,7 @@ def manage_game() -> None:
 
     except KeyboardInterrupt:
         error_and_exit("you have exited the game! please come back soon!")
+    # using a general exception to catch all possible errors and prevent the client from crashing without explanation
     except Exception as e:
         error_and_exit("there was a problem with the connection to the server, please try again:\n" + str(e))
 

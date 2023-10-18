@@ -3,7 +3,6 @@ Author: Ori Boteach
 File Name: client_helpers
 Change Log: creation - 12/10/2023
 """
-
 import socket
 from asyncio.log import logger
 from chatlib import build_message, parse_message
@@ -12,8 +11,8 @@ from constants import CLIENT_IP, SERVER_PORT, PROTOCOL_CLIENT, PROTOCOL_SERVER
 
 def build_and_send_message(conn: socket, cmd: str, data: str) -> None:
     """
-    the function builds a new message using chatlib, wanted code and message.
-    Prints debug info, then sends it to the given socket
+    the function builds a new message with given command and message.
+    prints debug info and sends it to the given socket
     :param conn: socket object that is used to communicate with the server
     :param cmd: the command name
     :param data: the message field
@@ -31,10 +30,9 @@ def build_and_send_message(conn: socket, cmd: str, data: str) -> None:
 
 def recv_message_and_parse(conn: socket) -> tuple[str, str]:
     """
-    the function receives a new message from given socket,
-    then parses the message using chatlib
+    the function receives a new message from given socket, then parses the message using chatlib
     :param conn: socket object that is used to communicate with the server
-    :return: cmd (str) and data (str) of the received message.
+    :return: the command and data fields of the received message.
              If error occurred, will return None, None
     """
     full_message = conn.recv(1024).decode()
