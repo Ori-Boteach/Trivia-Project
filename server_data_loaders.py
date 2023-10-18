@@ -47,6 +47,7 @@ def format_web_question(question: dict, answers: list, correct_answer: str, form
     """
     question["question"] = question["question"].replace("&quot;", "\"")
     answers = [answer.replace("&quot;", "\"") for answer in answers]
+    correct_answer = correct_answer.replace("&quot;", "\"")
 
     # check if the question or answers contain the '#' character and remove it
     question["question"] = question["question"].replace("#", "")
