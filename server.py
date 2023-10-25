@@ -3,8 +3,9 @@ Author: Ori Boteach
 File Name: server
 Change Log: creation - 15/10/2023, extensions usage - 17/10/2023
 """
-# importing server_menu_handlers module to set it's global variables
+# importing server_menu_handlers module to use its global variables
 import server_menu_handlers
+
 import select
 from server_menu_handlers import *
 from server_data_loaders import load_user_database, load_web_questions
@@ -90,8 +91,8 @@ def start_server() -> socket:
     the function loads relevant data from and starts the server
     :return: the server socket connection
     """
-    # declare global dictionaries and load data to them
-    # *** handling ALL GLOBAL variables in server.py with module prefix for correct usage ***
+    # load data to the global dictionaries from the imported module
+    # *** handling ALL GLOBAL variables in server.py with module prefix for valid usage ***
     server_menu_handlers.users = load_user_database()
     server_menu_handlers.questions = load_web_questions()
 
