@@ -41,7 +41,7 @@ def parse_message(data: str) -> tuple[str, str]:
     :param data: a full inputted message
     :return: cmd and data. If some error occurred, returns None, None
     :except: ERROR_RETURN, ERROR_RETURN if InvalidDelimiterCount or InvalidFieldLength errors occurred
-    :except: ERROR_RETURN, ERROR_RETURN if InvalidFieldLength, NoneExistingProtocol or InvalidLengthField errors
+    :except: ERROR_RETURN, ERROR_RETURN if InvalidFieldLength, NoneExistingProtocol, InvalidLengthField errors occurred
     """
 
     # validate delimiter count and whole data length
@@ -53,7 +53,6 @@ def parse_message(data: str) -> tuple[str, str]:
 
     # separating the data to it's fields
     subfields = data.split(DELIMITER)
-
     cmd, length, message = subfields
 
     # validate field's lengths and contents

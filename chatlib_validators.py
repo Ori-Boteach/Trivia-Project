@@ -20,7 +20,7 @@ def build_validator(cmd: str, data: str) -> None:
         raise InvalidFieldLength
 
     if cmd not in PROTOCOL_CLIENT.values() and cmd not in PROTOCOL_SERVER.values():
-        raise NoneExistingProtocol
+        raise NoneExistingProtocol(cmd)
 
 
 def initial_parser_validator(data: str) -> None:
@@ -31,7 +31,7 @@ def initial_parser_validator(data: str) -> None:
     :raise: InvalidFieldLength if the data length is incorrect
     """
     if data.count(DELIMITER) != 2:
-        raise InvalidDelimiterCount
+        raise InvalidDelimiterCount(data.count(DELIMITER))
 
     if len(data) > MAX_MSG_LENGTH:
         raise InvalidFieldLength
@@ -54,7 +54,7 @@ def parser_fields_validator(cmd: str, length: str, message: str) -> None:
     # check that the given command is valid
     cmd = cmd.replace(" ", "")
     if cmd not in PROTOCOL_CLIENT.values() and cmd not in PROTOCOL_SERVER.values():
-        raise NoneExistingProtocol
+        raise NoneExistingProtocol(cmd)
 
     # can work both with spaces and with zeros!
     length = length.replace(" ", "0")
