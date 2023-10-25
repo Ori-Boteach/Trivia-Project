@@ -1,16 +1,13 @@
 """
 Author: Ori Boteach
 File Name: server
-Change Log: creation - 15/10/2023
+Change Log: creation - 15/10/2023, added extensions - 17/10/2023
 """
 import random
-import socket
 import select
-from constants import *
-from chatlib import parse_message, split_data, build_message
+from chatlib import split_data
 from server_data_loaders import load_user_database, load_web_questions
-from server_helpers import setup_socket, recv_message_and_parse, \
-    build_and_send_message, send_error, messages_to_send, print_client_sockets
+from server_helpers import *
 
 # GLOBAL variables:
 users = {}
@@ -33,10 +30,10 @@ def handle_highscore_message(conn: socket) -> None:
     the function sends to the client the players score list (from highest to lowest)
     :param conn: socket object that is used to communicate with the client
     """
-    # get sorted users, dictionary pairs by their score
+    # get sorted users dictionary pairs by their score
     sorted_users = sorted(users.items(), key=lambda x: x[1]["score"], reverse=True)
 
-    # build the message to send to the client
+    # build the message and send to the client
     scores = ""
     for user in sorted_users:
         scores += user[0] + ": " + str(user[1]["score"]) + "\n"
@@ -49,7 +46,6 @@ def handle_logged_message(conn: socket) -> None:
     the function sends to the client the players that are currently logged in
     :param conn: socket object that is used to communicate with the client
     """
-    # build the message of current users to send to the client
     logged = ""
     for client_address in logged_users.keys():
         logged += logged_users[client_address] + ", "
@@ -109,10 +105,8 @@ def handle_login_message(conn: socket, data: str) -> None:
     if validate_login(conn, message_fields, cmd) == ERROR_MSG:
         return
 
-    # successful login
+    # send successful login message and add user's username to logged users
     build_and_send_message(conn, PROTOCOL_SERVER["login_ok_msg"], "")
-
-    # add user's username to logged users after successful login
     logged_users[conn.getpeername()] = message_fields[0]
 
 
@@ -145,7 +139,7 @@ def create_question(username: str) -> str:
     # get a question the user hasn't been asked yet
     id, question = return_unseen_questions(username)
 
-    # add the question to the user's asked questions
+    # add the question to the user's asked questions and return it
     users[username]["questions_asked"].append(id)
 
     answers = question["answers"]
@@ -228,9 +222,8 @@ def handle_client_message(conn: socket, cmd: str, data: str) -> None:
     # get the full message from the client
     full_message = build_message(cmd, data)
 
-    # if user is not logged in
+    # if user is not logged in, handle user login command or send error otherwise
     if conn.getpeername() not in logged_users:
-        # handle user login command or send error otherwise
         if cmd == PROTOCOL_CLIENT["login_msg"]:
             handle_login_message(conn, full_message)
         else:
@@ -265,7 +258,7 @@ def manage_existing_client(current_socket: socket, client_sockets: list[socket])
 
         elif cmd == PROTOCOL_CLIENT["logout_msg"]:
             handle_client_message(current_socket, cmd, data)  # handle logout message
-            client_sockets.remove(current_socket)  # remove exiting client from client_sockets list
+            client_sockets.remove(current_socket)
             current_socket.close()
             print("[SERVER] ", "user has disconnected, waiting for a new connection")
 
@@ -277,7 +270,7 @@ def manage_existing_client(current_socket: socket, client_sockets: list[socket])
     # a broad exception in order to catch all possible exceptions and prevent the server from crashing
     except:
         logged_users.pop(current_socket.getpeername())
-        client_sockets.remove(current_socket)  # remove exiting client from client_sockets list
+        client_sockets.remove(current_socket)
         current_socket.close()
         print("[SERVER] ", "user has disconnected forcibly, waiting for a new connection")
 
