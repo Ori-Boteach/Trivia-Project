@@ -16,6 +16,8 @@ def load_questions() -> dict:
     :except: IOError if the file is not found or empty
     :except: json.JSONDecodeError if the JSON data is not valid
     """
+    questions_dict = {}  # the questions dictionary returned
+
     try:
         with open("databases/questions.json", "r") as file:
             questions = json.load(file)
@@ -27,12 +29,10 @@ def load_questions() -> dict:
 
     # catch a case where the file is not found or empty
     except IOError as ioe:
-        questions_dict = {}
         print(f"An I/O error occurred: {ioe}")
 
     # catch a case where the json file content is not valid
     except json.JSONDecodeError as e:
-        questions_dict = {}
         print(f"Error decoding JSON: {e}")
 
     return questions_dict
@@ -47,11 +47,12 @@ def format_web_question(question: dict, answers: list, correct_answer: str, form
     :param formatted_questions: the list of already formatted questions
     :return: the formatted question
     """
+    # correct quot representation
     question["question"] = question["question"].replace("&quot;", "\"")
     answers = [answer.replace("&quot;", "\"") for answer in answers]
     correct_answer = correct_answer.replace("&quot;", "\"")
 
-    # check if the question or answers contain the '#' character and remove it
+    # check if the question or answers contain the '#' character and remove it!
     question["question"] = question["question"].replace("#", "")
     answers = [answer.replace("#", "") for answer in answers]
     correct_answer = correct_answer.replace("#", "")
@@ -82,7 +83,7 @@ def handle_web_question(question: dict, formatted_questions: list) -> list:
     # format the question
     formatted_question = format_web_question(question, answers, correct_answer, formatted_questions)
 
-    # don't add a question if it contains the '&' character
+    # don't add a question if it contains the '&' character (not presentable)
     if formatted_question["question"].count("&") == 0 and all(
             answer.count("&") == 0 for answer in formatted_question["answers"]):
         formatted_questions.append(formatted_question)
@@ -98,6 +99,8 @@ def load_web_questions() -> dict:
     :except: json.JSONDecodeError if the JSON data is not valid
     """
     url = 'https://opentdb.com/api.php?amount=50&type=multiple'
+    formatted_questions_dict = {}  # the returned questions dictionary
+
     try:
         # get data from the web URL and parse JSON data to a dictionary
         response = requests.get(url)
@@ -115,15 +118,12 @@ def load_web_questions() -> dict:
 
     except requests.exceptions.RequestException as e:
         print(f"A web error occurred: {e}")
-        formatted_questions_dict = {}
 
     except OSError as e:
         print(f"An OS error occurred: {e}")
-        formatted_questions_dict = {}
 
     except json.JSONDecodeError as e:
         print(f"Error decoding JSON: {e}")
-        formatted_questions_dict = {}
 
     return formatted_questions_dict
 
@@ -135,18 +135,18 @@ def load_user_database() -> dict:
     :except: IOError if the file is not found or empty
     :except: json.JSONDecodeError if the JSON data is not valid
     """
+    users_dict = {}  # the users dictionary returned
+
     try:
         with open("databases/users.json", "r") as file:
             users_dict = json.load(file)
 
     # catch a case where the file is not found or empty
     except IOError as ioe:
-        users_dict = {}
         print(f"An I/O error occurred: {ioe}")
 
     # catch a case where the json file content is not valid
     except json.JSONDecodeError as e:
-        users_dict = {}
         print(f"Error decoding JSON: {e}")
 
     return users_dict
