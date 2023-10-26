@@ -53,10 +53,10 @@ def handle_logged_message(conn: socket) -> None:
 
 def handle_logout_message(conn: socket) -> None:
     """
-    the function closes the given socket, in later chapters, it removes the user from logged_users dictionary
+    the function closes the given socket and removes the user from logged_users dictionary
     :param conn: socket object that is used to communicate with the client
     """
-    global logged_users  # declaring the global variable because it changes
+    global logged_users  # declaring the global variable when modifying it
 
     # remove user from logged users and close connection after successful logout
     logged_users.pop(conn.getpeername())
@@ -91,8 +91,8 @@ def validate_login(conn: socket, message_fields: list[str], cmd: str) -> str:
 
 def handle_login_message(conn: socket, data: str) -> None:
     """
-    the function gets socket and message data of login message, it checks if the user exists and responds accordingly.
-    if invalid - sends error and finished. If all ok, sends OK message and adds user and address to logged_users
+    the function gets a socket and a login message, it checks if the user exists and responds accordingly.
+    if invalid - sends an error. If all ok, sends OK message and adds the user to logged_users
     :param conn: socket object that is used to communicate with the client
     :param data: a string representing the data sent by the username according to protocol
     """
@@ -149,7 +149,7 @@ def create_question(username: str) -> str:
 
 def handle_question_message(conn: socket, username: str) -> None:
     """
-    the function sends with provided socket a random question, by protocol, to the client
+    the function sends with the provided socket a random question to the client, by protocol
     :param conn: socket object that is used to communicate with the client
     :param username: a string representing client's username
     """
@@ -167,7 +167,7 @@ def return_answer_response(conn, user_answer: str, correct_answer: str) -> None:
     :param user_answer: the users answer to the question
     :param correct_answer: the correct answer to the question
     """
-    global users  # declaring the global variable because it may change
+    global users  # declaring the global variable when modifying it
 
     if user_answer == correct_answer:
         # update user's score and send correct answer message

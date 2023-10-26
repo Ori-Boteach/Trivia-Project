@@ -5,15 +5,16 @@ Change Log: creation - 15/10/2023, extensions usage - 17/10/2023
 """
 # importing server_menu_handlers module to use its global variables
 import server_menu_handlers
-
 import select
+
+# importing server_menu_handlers functions
 from server_menu_handlers import *
 from server_data_loaders import load_user_database, load_web_questions
 
 
 def handle_client_message(conn: socket, cmd: str, data: str) -> None:
     """
-    the function gets message code and data and calls the right function to handle command
+    the function gets a message code and data and calls the right function to handle the command
     :param conn: socket object that is used to communicate with the client
     :param cmd: a string representing the code field in the protocol
     :param data: a string representing the message field in the protocol
@@ -52,7 +53,7 @@ def manage_existing_client(current_socket: socket, client_sockets: list[socket])
     the function gets a socket of an existing client and a list of all client sockets and handles the client's message
     :param current_socket: the socket of the client that sent the message
     :param client_sockets: all the connected client sockets
-    :return: if needed, the updated sockets list and closed socket
+    :return: the client socket (closed or not) and the updated sockets list
     """
     try:
         # get client message and separate fields
@@ -88,7 +89,7 @@ def manage_existing_client(current_socket: socket, client_sockets: list[socket])
 
 def start_server() -> socket:
     """
-    the function loads relevant data from and starts the server
+    the function loads relevant data and starts the server
     :return: the server socket connection
     """
     # load data to the global dictionaries from the imported module

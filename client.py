@@ -53,10 +53,9 @@ def get_logged_users(conn: socket) -> None:
 
 def play_question_validation(msg_code: str) -> None:
     """
-    the function check if there are no more questions or if there was an error in the response
+    the function checks if there are no more questions or if there was an error in the response
     :param msg_code: the returned message command
     """
-
     # check for a case where there are no more questions left
     if msg_code == PROTOCOL_SERVER["no_questions_msg"]:
         error_and_exit("no more questions! GAME OVER!!!")
@@ -83,7 +82,7 @@ def print_question(data: str) -> list[str]:
 
 def send_user_answer(conn, question_fields) -> bool:
     """
-    the function send user's answer and print correlating response
+    the function send user's answer and print a correlating response
     :param conn: socket object that is used to communicate with the server
     :param question_fields: the different parts of the question
     :return: True if the user's answer was correct, False otherwise -> ONLY for testing

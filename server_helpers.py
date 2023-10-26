@@ -13,7 +13,7 @@ messages_to_send = []  # a list of messages to send to clients
 
 def build_and_send_message(conn: socket, cmd: str, msg: str) -> None:
     """
-    the function builds a new message using chatlib, wanted code and message.
+    the function builds a new message with cmd and data (using chatlib).
     Prints debug info, then sends it to the given socket
     :param conn: socket object that is used to communicate with the client
     :param cmd: the command name
@@ -40,8 +40,7 @@ def send_error(conn: socket, error_msg: str) -> None:
 
 def recv_message_and_parse(conn: socket) -> tuple[str, str]:
     """
-    the function receives a new message from given socket,
-    then parses the message using chatlib
+    the function receives a new message from given socket, then parses the message using chatlib
     :param conn: socket object that is used to communicate with the client
     :return: cmd (str) and data (str) of the received message.
              If error occurred, will return None, None
