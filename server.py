@@ -103,9 +103,10 @@ def start_server() -> socket:
     return setup_socket()
 
 
-def main():
+def manage_server_run() -> None:
     """
-    the main function in the server module
+    the function manages the whole server operation and handles multiple clients
+    raises an exception if there was a connection problem or forced disconnect
     """
     # start server function - load data and start the server
     server_socket = start_server()
@@ -137,6 +138,13 @@ def main():
             if current_socket in ready_to_write:
                 current_socket.send(full_message)
                 messages_to_send.remove(message)
+
+
+def main():
+    """
+    the main function in the server module
+    """
+    manage_server_run()
 
 
 if __name__ == '__main__':
