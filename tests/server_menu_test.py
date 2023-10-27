@@ -5,20 +5,22 @@ Change Log: creation - 17/10/2023
 """
 from unittest.mock import patch, Mock
 from constants import PROTOCOL_CLIENT
-from server import handle_getscore_message, messages_to_send, handle_highscore_message, handle_logged_message, \
-    handle_client_message
+from server import handle_client_message
+from server_helpers import messages_to_send
+from server_menu_handlers import handle_getscore_message, handle_highscore_message, handle_logged_message
 
 
-@patch('server.users', {"test": {"score": 5}})
+@patch('server_menu_handlers.users', {"test": {"score": 5}})
 def test_handle_getscore_message():
     """
-    test that the handle_getscore_message function and validate that it adds the correct message to the messages_to_send list
+    test that the handle_getscore_message function and validate
+    that it adds the correct message to the messages_to_send list
     :return: whether the expected message was added to the messages_to_send list
     """
     # Arrange
     username = "test"
     expected_message = "YOUR_SCORE      |0001|5"
-    mock_socket = Mock()  # Create a mock socket
+    mock_socket = Mock()  # create a mock socket
 
     # Act
     handle_getscore_message(mock_socket, username)
@@ -27,10 +29,11 @@ def test_handle_getscore_message():
     assert (mock_socket, expected_message.encode()) in messages_to_send
 
 
-@patch('server.users', {"test": {"score": 0}, "master": {"score": 200}, "yossi": {"score": 50}})
+@patch('server_menu_handlers.users', {"test": {"score": 0}, "master": {"score": 200}, "yossi": {"score": 50}})
 def test_handle_highscore_message():
     """
-    test the handle_highscore_message function and validate that it adds the correct message to the messages_to_send list
+    test the handle_highscore_message function and validate
+    that it adds the correct message to the messages_to_send list
     :return: whether the expected message was added to the messages_to_send list
     """
     # Arrange
@@ -44,10 +47,11 @@ def test_handle_highscore_message():
     assert (mock_socket, expected_message.encode()) in messages_to_send
 
 
-@patch('server.logged_users', {("127.0.0.1", 52116): "test", ("127.0.0.1", 52117): "master"})
+@patch('server_menu_handlers.logged_users', {("127.0.0.1", 52116): "test", ("127.0.0.1", 52117): "master"})
 def test_handle_logged_message():
     """
-    test the handle_logged_message function and validate that it adds the correct message to the messages_to_send list
+    test the handle_logged_message function and validate
+    that it adds the correct message to the messages_to_send list
     :return: whether the expected message was added to the messages_to_send list
     """
     # Arrange
@@ -62,7 +66,7 @@ def test_handle_logged_message():
 
 
 @patch('server.handle_login_message')
-@patch('server.logged_users', {("127.0.0.1", 52116): "test", ("127.0.0.1", 52117): "master"})
+@patch('server_menu_handlers.logged_users', {("127.0.0.1", 52116): "test", ("127.0.0.1", 52117): "master"})
 def test_handle_client_not_logged_user_command(mock_logout):
     """
     test the handle_client_message function for a not logged user command and check
@@ -74,7 +78,7 @@ def test_handle_client_not_logged_user_command(mock_logout):
     cmd = PROTOCOL_CLIENT["login_msg"]
     data = "not logged in user#password"
 
-    # Configure the getpeername method on the mock socket
+    # configure the getpeername method on the mock socket
     mock_socket.getpeername.return_value = ("not logged in user", 52116)
 
     # Act
@@ -85,7 +89,7 @@ def test_handle_client_not_logged_user_command(mock_logout):
 
 
 @patch('server.handle_getscore_message')
-@patch('server.logged_users', {("127.0.0.1", 52116): "test", ("127.0.0.1", 52117): "master"})
+@patch('server_menu_handlers.logged_users', {("127.0.0.1", 52116): "test", ("127.0.0.1", 52117): "master"})
 def test_handle_client_logged_user_command(mock_login):
     """
     test the handle_client_message function for a logged user command and check
@@ -97,7 +101,7 @@ def test_handle_client_logged_user_command(mock_login):
     cmd = PROTOCOL_CLIENT["my_score_msg"]
     data = "example data"
 
-    # Configure the getpeername method on the mock socket
+    # configure the getpeername method on the mock socket
     mock_socket.getpeername.return_value = ("127.0.0.1", 52116)
 
     # Act

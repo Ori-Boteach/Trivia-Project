@@ -3,13 +3,13 @@ Author: Ori Boteach
 File Name: server_trivia_logic_test (pytest unnitesting for the server side)
 Change Log: creation - 18/10/2023
 """
+import server_menu_handlers
 from unittest.mock import Mock, patch
-import server
 from server import handle_question_message, handle_answer_message
 from server_helpers import messages_to_send
 
 
-@patch('server.create_question')
+@patch('server_menu_handlers.create_question')
 def test_handle_question_message(mock_create_question):
     """
     test the handle_question_message function and validate that it sends a question message to the client
@@ -28,10 +28,12 @@ def test_handle_question_message(mock_create_question):
     assert (mock_socket, expected_message.encode()) in messages_to_send
 
 
-@patch('server.questions', {1: {"id": 1, "question": "How much is 2+2", "answers": ["3", "4", "2", "1"], "correct": 2}})
+@patch('server_menu_handlers.questions',
+       {1: {"id": 1, "question": "How much is 2+2", "answers": ["3", "4", "2", "1"], "correct": 2}})
 def test_wrong_answer():
     """
-    test the handle_answer_message function and validate that it sends a wrong answer message to the client if needed
+    test the handle_answer_message function and validate
+    that it sends a wrong answer message to the client if needed
     """
     # Arrange
     mock_socket = Mock()
@@ -44,13 +46,14 @@ def test_wrong_answer():
     assert (mock_socket, expected_message.encode()) in messages_to_send
 
 
-@patch('server.questions', {1: {"id": 1, "question": "How much is 2+2", "answers": ["3", "4", "2", "1"], "correct": 2}})
-@patch('server.users', {"test": {"password": "test", "score": 0, "questions_asked": ["1"]}})
-@patch('server.logged_users', {("127.0.0.1", 52116): "test", ("127.0.0.1", 52117): "master"})
+@patch('server_menu_handlers.questions',
+       {1: {"id": 1, "question": "How much is 2+2", "answers": ["3", "4", "2", "1"], "correct": 2}})
+@patch('server_menu_handlers.users', {"test": {"password": "test", "score": 0, "questions_asked": ["1"]}})
+@patch('server_menu_handlers.logged_users', {("127.0.0.1", 52116): "test", ("127.0.0.1", 52117): "master"})
 def test_right_answer():
     """
-    test the handle_answer_message function and validate that it sends a right answer message to the client if needed
-    In addition, check that the user score is updated
+    test the handle_answer_message function and validate that it sends a right
+    answer message to the client if needed. In addition, check that the user score is updated
     """
     # Arrange
     mock_socket = Mock()
@@ -64,4 +67,4 @@ def test_right_answer():
 
     # Assert (check a right answer message was sent + the user score was updated!)
     assert (mock_socket, expected_message.encode()) in messages_to_send
-    assert server.users["test"]["score"] == 5
+    assert server_menu_handlers.users["test"]["score"] == 5

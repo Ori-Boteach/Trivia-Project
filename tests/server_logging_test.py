@@ -8,7 +8,7 @@ from server import handle_logout_message, handle_login_message, logged_users
 from server_helpers import messages_to_send
 
 
-@patch('server.logged_users', {("127.0.0.1", 52116): "test", ("127.0.0.1", 52117): "master"})
+@patch('server_menu_handlers.logged_users', {("127.0.0.1", 52116): "test", ("127.0.0.1", 52117): "master"})
 def test_handle_logout_message():
     """
     test the handle_logout_message function and validate that it removes the user from the logged_users dictionary
@@ -17,7 +17,7 @@ def test_handle_logout_message():
     # Arrange
     mock_socket = Mock()
 
-    # Configure the getpeername method on the mock socket
+    # configure the getpeername method on the mock socket
     mock_socket.getpeername.return_value = ("127.0.0.1", 52116)
 
     # Act
@@ -30,7 +30,7 @@ def test_handle_logout_message():
     assert ("127.0.0.1", 52116) not in patched_logged_users
 
 
-@patch('server.users', {"test": {"password": "test", "score": 0, "questions_asked": []}})
+@patch('server_menu_handlers.users', {"test": {"password": "test", "score": 0, "questions_asked": []}})
 def test_successful_login():
     """
     test the handle_login_message function and validate that it adds the user to the logged_users dictionary
@@ -40,7 +40,7 @@ def test_successful_login():
     mock_socket = Mock()
     client_sent_data = "LOGIN           |0009|test#test"
 
-    # Configure the getpeername method on the mock socket
+    # configure the getpeername method on the mock socket
     mock_socket.getpeername.return_value = ("127.0.0.1", 52117)
 
     # Act
@@ -50,7 +50,7 @@ def test_successful_login():
     assert ("127.0.0.1", 52117) in logged_users
 
 
-@patch('server.users', {"test": {"password": "test", "score": 0, "questions_asked": []}})
+@patch('server_menu_handlers.users', {"test": {"password": "test", "score": 0, "questions_asked": []}})
 def test_wrong_username_login():
     """
     test the handle_login_message function and validate that it does not add a user
@@ -62,7 +62,7 @@ def test_wrong_username_login():
     client_sent_data = "LOGIN           |0026|none_existing_username#123"
     expected_message = "ERROR           |0032|Error! Username does not exists!"
 
-    # Configure the getpeername method on the mock socket
+    # configure the getpeername method on the mock socket
     mock_socket.getpeername.return_value = ("127.0.0.1", 52117)
 
     # Act
@@ -72,7 +72,7 @@ def test_wrong_username_login():
     assert (mock_socket, expected_message.encode()) in messages_to_send
 
 
-@patch('server.users', {"test": {"password": "test", "score": 0, "questions_asked": []}})
+@patch('server_menu_handlers.users', {"test": {"password": "test", "score": 0, "questions_asked": []}})
 def test_wrong_password_login():
     """
     test the handle_login_message function and validate that it does not add a user
@@ -84,7 +84,7 @@ def test_wrong_password_login():
     client_sent_data = "LOGIN           |0019|test#wrong_password"
     expected_message = "ERROR           |0031|Error! Password does not match!"
 
-    # Configure the getpeername method on the mock socket
+    # configure the getpeername method on the mock socket
     mock_socket.getpeername.return_value = ("127.0.0.1", 52117)
 
     # Act
